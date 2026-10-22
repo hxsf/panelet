@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: MPL-2.0
+
+[package]
+name = "panelet-rune-abi-poc"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+# `std` matches the current ESP-IDF integration. `emit` stays disabled.
+rune = { version = "=0.14.2", default-features = false, features = ["std"] }
+panelet-core = { path = "../panelet-core" }
+panelet-ui = { path = "../panelet-ui" }
+
+ssd2683 = { path = "../ssd2683", features = ["experimental-partial-refresh"] }
+
+sha2 = { version = "=0.10.9", default-features = false }
+
+[target.'cfg(target_os = "espidf")'.dependencies]
+esp-idf-sys = "=0.37.2"

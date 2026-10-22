@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: MPL-2.0
+
+[package]
+name = "panelet-rune-footprint-poc"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+# `std` is selected intentionally for the current ESP-IDF integration.  The
+# default `emit` feature is omitted because rich terminal diagnostics are not
+# required by the on-device probe and would distort the minimal footprint.
+rune = { version = "=0.14.2", default-features = false, features = ["std"] }

@@ -1,0 +1,578 @@
+<!DOCTYPE html><html lang="zh"><head><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta charset="UTF-8"><meta name="viewport" content="user-scalable=yes, width=device-width, initial-scale=1, maximum-scale=5"><meta name="theme-color" content="#1976d2"><meta name="msapplication-TileColor" content="#1976d2"><meta name="msapplication-TileImage" content="/_assets/favicons/mstile-150x150.png"><title>ZECTRIX NOTE4C 开发套件开发指南 | ZECTRIX Wiki</title><meta name="description" content="ZECTRIX NOTE4C 四色电子墨水屏开发套件的硬件参考、引脚映射、固件刷写、预编译固件使用和 ESP-IDF 开发指南。"><meta property="og:title" content="ZECTRIX NOTE4C 开发套件开发指南"><meta property="og:type" content="website"><meta property="og:description" content="ZECTRIX NOTE4C 四色电子墨水屏开发套件的硬件参考、引脚映射、固件刷写、预编译固件使用和 ESP-IDF 开发指南。"><meta property="og:image"><meta property="og:url" content="https://wiki.zectrix.com/zh/hardware/note4c/quick-start"><meta property="og:site_name" content="ZECTRIX Wiki"><link rel="apple-touch-icon" sizes="180x180" href="/_assets/favicons/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="192x192" href="/_assets/favicons/android-chrome-192x192.png"><link rel="icon" type="image/png" sizes="32x32" href="/_assets/favicons/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/_assets/favicons/favicon-16x16.png"><link rel="mask-icon" href="/_assets/favicons/safari-pinned-tab.svg" color="#1976d2"><link rel="manifest" href="/_assets/manifest.json"><script>var siteConfig = {"title":"ZECTRIX Wiki","theme":"default","darkMode":false,"tocPosition":"right","lang":"zh","rtl":false,"company":"ZECTRIX LAB 极趣实验室","contentLicense":"alr","footerOverride":"","logoUrl":"/zectrix-logo-symbol-v2.png"}
+var siteLangs = [{"code":"en","name":"English"},{"code":"zh","name":"中文 (Zhōngwén)"}]
+</script><link type="text/css" rel="stylesheet" href="/_assets/css/app.8d70d2a82242ce052529.css"><script type="text/javascript" src="/_assets/js/runtime.js?1767865929"></script><script type="text/javascript" src="/_assets/js/app.js?1767865929"></script><!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QND3QFEXDK"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-QND3QFEXDK');
+</script>
+<style type="text/css">@font-face{font-family:"Zectrix Inter";src:url("/inter-400.woff2") format("woff2");font-style:normal;font-weight:400;font-display:swap}@font-face{font-family:"Zectrix Inter";src:url("/inter-600.woff2") format("woff2");font-style:normal;font-weight:600;font-display:swap}@font-face{font-family:"Zectrix Inter";src:url("/inter-700.woff2") format("woff2");font-style:normal;font-weight:700;font-display:swap}@font-face{font-family:"Zectrix Space";src:url("/space-grotesk-600.woff2") format("woff2");font-style:normal;font-weight:600;font-display:swap}@font-face{font-family:"Zectrix Space";src:url("/space-grotesk-700.woff2") format("woff2");font-style:normal;font-weight:700;font-display:swap}:root{--z-paper:#f7f6f2;--z-white:#ffffff;--z-ink:#171817;--z-muted:#6d6d68;--z-line:rgba(23, 24, 23, 0.12);--z-line-strong:rgba(23, 24, 23, 0.28);--z-soft:#efeee9;--z-orange:#ef6a24;--z-orange-dark:#cf4f11;--z-code:#1c1d1b}.v-application,body,html{background:var(--z-paper)!important;color:var(--z-ink)!important;font-family:"Zectrix Inter","PingFang SC","Microsoft YaHei",system-ui,sans-serif!important;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}::selection{background:rgba(239,106,36,.2);color:var(--z-ink)}.v-btn,.v-list-item,a{transition:color 160ms ease,background-color 160ms ease,border-color 160ms ease!important}.v-btn:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid rgba(239,106,36,.28)!important;outline-offset:2px}.nav-header-inner .v-toolbar__content,.nav-header-inner.v-toolbar,.nav-header.v-toolbar{background:rgba(247,246,242,.97)!important;color:var(--z-ink)!important}.nav-header.v-toolbar{border-bottom:1px solid var(--z-line)!important;box-shadow:none!important}.nav-header .v-toolbar__content{box-shadow:none!important}.nav-header .v-avatar{border:0!important;border-radius:0!important}.nav-header .org-logo .v-image__image{background-size:contain!important;background-repeat:no-repeat!important}.nav-header .subheading,.nav-header .v-breadcrumbs li,.nav-header .v-breadcrumbs__divider,.nav-header .v-btn__content,.nav-header .v-icon,.nav-header .v-toolbar__title,.nav-header .white--text{color:var(--z-ink)!important;caret-color:var(--z-ink)!important}.nav-header .subheading{font-family:"Zectrix Space","PingFang SC",sans-serif!important;font-size:17px!important;font-weight:600!important;letter-spacing:-.02em!important}.nav-header .v-btn{border-radius:0!important}.nav-header .v-btn:hover{background:rgba(239,106,36,.1)!important}.nav-header-inner .v-input__slot{background:var(--z-white)!important;border:1px solid var(--z-line-strong)!important;border-radius:0!important;box-shadow:none!important}.nav-header-inner .v-text-field input{color:var(--z-ink)!important;font-weight:500}.nav-header-inner .v-input__slot .v-icon,.nav-header-inner .v-label{color:var(--z-muted)!important}.v-navigation-drawer .v-list.theme--dark.primary,.v-navigation-drawer .v-navigation-drawer__content,.v-navigation-drawer.theme--dark.primary{background:var(--z-paper)!important;color:var(--z-ink)!important}.v-navigation-drawer{border-right:1px solid var(--z-line)!important;box-shadow:none!important}.v-navigation-drawer__border{background:0 0!important}.v-navigation-drawer .v-list-item{min-height:42px!important;margin:1px 10px!important;padding:0 12px!important;border-radius:0!important;color:var(--z-ink)!important}.v-navigation-drawer .v-list-item:before{background:var(--z-orange)!important}.v-navigation-drawer .v-list-item:hover{background:var(--z-soft)!important}.v-navigation-drawer .v-list-item--active{background:var(--z-white)!important;box-shadow:inset 3px 0 0 var(--z-orange)!important}.v-navigation-drawer .v-list-item--active .v-icon,.v-navigation-drawer .v-list-item--active .v-list-item__title{color:var(--z-orange-dark)!important}.v-navigation-drawer .v-list-item__title{color:var(--z-ink)!important;font-size:13px!important;font-weight:600!important;letter-spacing:0!important}.v-navigation-drawer .v-list-item__icon{margin-right:14px!important}.v-navigation-drawer .v-list-item__action .v-icon,.v-navigation-drawer .v-list-item__icon .v-icon{color:var(--z-muted)!important}.v-navigation-drawer .v-subheader{height:auto!important;min-height:34px!important;margin-top:14px!important;padding:10px 22px 4px!important;color:var(--z-orange-dark)!important;font-family:"Zectrix Space","PingFang SC",sans-serif!important;font-size:10px!important;font-weight:700!important;letter-spacing:.12em!important;text-transform:uppercase}.v-main,.v-main__wrap{background:var(--z-paper)!important}.page-col-content.is-page-header,.page-col-content.is-page-header+.page-col-sd,.v-main header.grey.lighten-3{background:var(--z-paper)!important}.v-main header.grey.lighten-3{border-bottom:1px solid var(--z-line)!important}.page-header-headings .headline{color:var(--z-ink)!important;font-family:"Zectrix Space","PingFang SC",sans-serif!important;font-size:clamp(22px, 2.2vw, 30px)!important;font-weight:600!important;letter-spacing:-.035em!important;line-height:1.18!important}.page-header-headings .caption{color:var(--z-muted)!important}.page-col-content:not(.is-page-header){padding-top:24px!important;padding-bottom:48px!important}.contents{background:var(--z-white)!important;border:1px solid var(--z-line)!important;padding:clamp(28px,3vw,48px) clamp(24px,4vw,64px) 64px!important;color:#343531!important;font-size:15.5px!important;line-height:1.85!important}.contents li,.contents p{color:#454640!important;line-height:1.85!important}.contents h1,.contents h2,.contents h3,.contents h4,.contents h5,.contents h6{color:var(--z-ink)!important;font-family:"Zectrix Space","PingFang SC",sans-serif!important;font-weight:600!important;letter-spacing:-.035em!important}.contents h2{margin-top:2.2em!important;padding-top:.8em!important;border-top:1px solid var(--z-line)!important;font-size:clamp(25px, 2.2vw, 34px)!important;line-height:1.2!important}.contents h1{padding-bottom:14px!important;border-bottom:1px solid var(--z-line)!important;font-size:clamp(30px, 2.8vw, 42px)!important;line-height:1.15!important}.contents h2:first-child{margin-top:0!important;padding-top:0!important;border-top:0!important}.contents h3{margin-top:1.8em!important;font-size:clamp(20px, 1.7vw, 25px)!important;line-height:1.28!important}.contents h4{font-size:17px!important;letter-spacing:-.01em!important}.contents a{color:var(--z-orange-dark)!important;font-weight:600!important;text-decoration-color:rgba(207,79,17,0.35)!important;text-underline-offset:3px}.contents a:hover{color:var(--z-orange)!important;text-decoration-color:var(--z-orange)!important}.contents blockquote{margin:26px 0!important;padding:18px 22px!important;background:var(--z-soft)!important;border:0!important;border-left:4px solid var(--z-orange)!important;border-radius:0!important;color:var(--z-ink)!important}.contents blockquote p{margin:0!important;color:#4e4f4a!important}.contents code:not([class*=language-]){padding:.18em .42em!important;background:rgba(239,106,36,.09)!important;color:#9c3d0c!important;border:1px solid rgba(239,106,36,.2)!important;border-radius:0!important;font-size:.9em!important}.contents .prismjs,.contents pre{background:var(--z-code)!important;color:#e8e5dc!important;border:0!important;border-top:3px solid var(--z-orange)!important;border-radius:0!important;box-shadow:none!important}.contents img{border:1px solid var(--z-line)!important;border-radius:0!important}.contents hr{border:0!important;border-top:1px solid var(--z-line)!important}.contents table{border-collapse:collapse!important;border:1px solid var(--z-line)!important}.contents th{background:var(--z-soft)!important;color:var(--z-ink)!important;font-weight:700!important}.contents td,.contents th{border:1px solid var(--z-line)!important;padding:11px 14px!important}.page-col-sd{padding-top:24px!important}.page-author-card,.page-comments-card,.page-shortcuts-card,.page-toc-card,.v-dialog>.v-card,.v-menu__content{background:var(--z-white)!important;border:1px solid var(--z-line)!important;border-radius:0!important;box-shadow:none!important}.page-author-card .v-list,.page-comments-card .v-list,.page-toc-card .v-list{background:0 0!important}.page-toc-card .v-list-item{border-radius:0!important}.page-toc-card .v-list-item--active,.page-toc-card .v-list-item:hover{background:var(--z-soft)!important;color:var(--z-orange-dark)!important}.page-col-sd .caption,.page-col-sd .grey--text{color:var(--z-muted)!important}.v-alert,.v-btn,.v-card,.v-chip,.v-input__slot,.v-sheet{border-radius:0!important}.v-card{box-shadow:none!important}.v-btn--fab.primary,.v-btn.blue,.v-btn.info,.v-btn.primary{background:var(--z-orange)!important;border-color:var(--z-orange)!important;color:var(--z-white)!important;box-shadow:none!important}.v-btn--fab.primary:hover,.v-btn.blue:hover,.v-btn.info:hover,.v-btn.primary:hover{background:var(--z-orange-dark)!important}.v-btn--outlined{border-color:var(--z-line-strong)!important}.v-text-field .v-input__slot,.v-textarea .v-input__slot{background:var(--z-white)!important;border-color:var(--z-line-strong)!important;box-shadow:none!important}.v-input--is-focused .v-input__slot{border-color:var(--z-orange)!important}.v-footer.grey.lighten-3{background:var(--z-code)!important;color:#aaa9a3!important;border-top:1px solid rgba(255,255,255,.1)!important}.v-footer a{color:#f4f2ec!important}#app .page-header-headings .headline{color:var(--z-ink)!important}#app .v-navigation-drawer{border-color:var(--z-line)!important}#app .v-navigation-drawer .pa-3.d-flex.blue.darken-3{background:var(--z-paper)!important;border-bottom:1px solid var(--z-line)!important}#app .v-navigation-drawer .pa-3.d-flex .v-btn.blue.darken-2{background:var(--z-ink)!important;color:var(--z-white)!important;border:1px solid var(--z-ink)!important;box-shadow:none!important}#app .v-navigation-drawer .pa-3.d-flex .v-btn.blue.darken-2:hover{background:var(--z-orange)!important;border-color:var(--z-orange)!important}#app .v-navigation-drawer .v-list-item .v-icon.theme--dark,#app .v-navigation-drawer .v-list-item__avatar .v-icon{color:var(--z-muted)!important}#app .v-navigation-drawer .v-list-item--active .v-list-item__avatar .v-icon{color:var(--z-orange-dark)!important}#app .v-navigation-drawer .v-divider.theme--dark{border-color:var(--z-line)!important}#app .v-btn.btn-animate-edit.primary,#app .v-btn.v-btn--fab.primary{background:var(--z-orange)!important;border-color:var(--z-orange)!important;color:var(--z-white)!important;box-shadow:none!important}#app .v-btn.btn-animate-edit.primary:hover,#app .v-btn.v-btn--fab.primary:hover{background:var(--z-orange-dark)!important}#app header.v-toolbar.deep-purple{background:var(--z-paper)!important;color:var(--z-ink)!important;border-top:1px solid var(--z-line)!important;border-bottom:1px solid var(--z-line)!important;box-shadow:none!important}#app header.v-toolbar.deep-purple .v-icon,#app header.v-toolbar.deep-purple .v-label,#app header.v-toolbar.deep-purple input{color:var(--z-ink)!important;caret-color:var(--z-orange)!important}#app header.v-toolbar.deep-purple .v-input__slot:after,#app header.v-toolbar.deep-purple .v-input__slot:before{border-color:var(--z-orange)!important}@media (max-width:960px){.nav-header .subheading{font-size:14px!important}.page-col-content,.page-col-content.pl-4{padding-left:12px!important;padding-right:12px!important}.page-col-sd{padding:12px!important}.contents{padding:26px 20px 46px!important;font-size:15px!important}}@media (prefers-reduced-motion:reduce){*,::after,::before{scroll-behavior:auto!important;transition-duration:0s!important}}</style><meta name="theme-color" content="#f7f6f2"><link rel="icon" type="image/png" href="/zectrix-logo-symbol-v2.png"><script>document.querySelectorAll("link[rel*=icon]").forEach(function(node){node.href="/zectrix-logo-symbol-v2.png";});</script></head><body><div id="root"><page locale="zh" path="hardware/note4c/quick-start" title="ZECTRIX NOTE4C 开发套件开发指南" description="ZECTRIX NOTE4C 四色电子墨水屏开发套件的硬件参考、引脚映射、固件刷写、预编译固件使用和 ESP-IDF 开发指南。" :tags="[]" created-at="2026-07-13T05:47:40.138Z" updated-at="2026-08-19T09:11:05.999Z" author-name="Administrator" :author-id="1" editor="markdown" :is-published="true" toc="W3sidGl0bGUiOiJaRUNUUklYIE5PVEU0QyDlvIDlj5HlpZfku7blvIDlj5HmjIfljZciLCJhbmNob3IiOiIjemVjdHJpeC1ub3RlNGMt5byA5Y+R5aWX5Lu25byA5Y+R5oyH5Y2XIiwiY2hpbGRyZW4iOlt7InRpdGxlIjoi5Lqn5ZOB6K+05piOIiwiYW5jaG9yIjoiI+S6p+WTgeivtOaYjiIsImNoaWxkcmVuIjpbXX0seyJ0aXRsZSI6IuS7jui/memHjOW8gOWniyIsImFuY2hvciI6IiPku47ov5nph4zlvIDlp4siLCJjaGlsZHJlbiI6W119LHsidGl0bGUiOiLph43opoHor7TmmI4iLCJhbmNob3IiOiIj6YeN6KaB6K+05piOIiwiY2hpbGRyZW4iOltdfSx7InRpdGxlIjoi5Li76KaB54m55oCnIiwiYW5jaG9yIjoiI+S4u+imgeeJueaApyIsImNoaWxkcmVuIjpbXX0seyJ0aXRsZSI6IuWMheijheWGheWuuSIsImFuY2hvciI6IiPljIXoo4XlhoXlrrkiLCJjaGlsZHJlbiI6W119LHsidGl0bGUiOiLlhbjlnovlupTnlKgiLCJhbmNob3IiOiIj5YW45Z6L5bqU55SoIiwiY2hpbGRyZW4iOltdfSx7InRpdGxlIjoi6KeE5qC85Y+C5pWwIiwiYW5jaG9yIjoiI+inhOagvOWPguaVsCIsImNoaWxkcmVuIjpbXX0seyJ0aXRsZSI6IuaMiemUruS4juaOpeWPoyIsImFuY2hvciI6IiPmjInplK7kuI7mjqXlj6MiLCJjaGlsZHJlbiI6W119LHsidGl0bGUiOiLnlLXmupDkuI7lpI3kvY0iLCJhbmNob3IiOiIj55S15rqQ5LiO5aSN5L2NIiwiY2hpbGRyZW4iOltdfSx7InRpdGxlIjoi6L+b5YWlIEVTUDMyLVMzIOS4i+i9veaooeW8jyIsImFuY2hvciI6IiPov5vlhaUtZXNwMzItczMt5LiL6L295qih5byPIiwiY2hpbGRyZW4iOltdfSx7InRpdGxlIjoi5byV6ISa5pig5bCEIiwiYW5jaG9yIjoiI+W8leiEmuaYoOWwhCIsImNoaWxkcmVuIjpbeyJ0aXRsZSI6IueUteWtkOWiqOawtOWxj+aOpeWPoyIsImFuY2hvciI6IiPnlLXlrZDloqjmsLTlsY/mjqXlj6MiLCJjaGlsZHJlbiI6W119LHsidGl0bGUiOiLmjInplK7jgIFMRUTjgIHnlLXmsaDkuI7lhYXnlLUiLCJhbmNob3IiOiIj5oyJ6ZSuLWxlZC3nlLXmsaDkuI7lhYXnlLUiLCJjaGlsZHJlbiI6W119LHsidGl0bGUiOiLpn7PpopHmjqXlj6MiLCJhbmNob3IiOiIj6Z+z6aKR5o6l5Y+jIiwiY2hpbGRyZW4iOltdfSx7InRpdGxlIjoiSTJDIOWkluiuviIsImFuY2hvciI6IiNpMmMt5aSW6K6+IiwiY2hpbGRyZW4iOltdfSx7InRpdGxlIjoiVVNCIOS4jiBVQVJUIiwiYW5jaG9yIjoiI3VzYi3kuI4tdWFydCIsImNoaWxkcmVuIjpbXX1dfSx7InRpdGxlIjoi5Y6f55CG5Zu+IiwiYW5jaG9yIjoiI+WOn+eQhuWbviIsImNoaWxkcmVuIjpbXX0seyJ0aXRsZSI6IuWIt+WGmeWPguiAg+WbuuS7tiIsImFuY2hvciI6IiPliLflhpnlj4LogIPlm7rku7YiLCJjaGlsZHJlbiI6W3sidGl0bGUiOiLlj6/nm7TmjqXliLflhpnnmoTlkIjlubbplZzlg48iLCJhbmNob3IiOiIj5Y+v55u05o6l5Yi35YaZ55qE5ZCI5bm26ZWc5YOPIiwiY2hpbGRyZW4iOltdfSx7InRpdGxlIjoi5o6o6I2Q77yaWkVDVFJJWCDmtY/op4jlmajlm7rku7bmm7TmlrDlt6XlhbciLCJhbmNob3IiOiIj5o6o6I2QemVjdHJpeC3mtY/op4jlmajlm7rku7bmm7TmlrDlt6XlhbciLCJjaGlsZHJlbiI6W119LHsidGl0bGUiOiLlpIfpgInvvJplc3B0b29sIiwiYW5jaG9yIjoiI+Wkh+mAiWVzcHRvb2wiLCJjaGlsZHJlbiI6W119XX0seyJ0aXRsZSI6IuS9v+eUqOmihOe8luivkeWPguiAg+WbuuS7tiIsImFuY2hvciI6IiPkvb/nlKjpooTnvJbor5Hlj4LogIPlm7rku7YiLCJjaGlsZHJlbiI6W3sidGl0bGUiOiLmjInplK7mk43kvZwiLCJhbmNob3IiOiIj5oyJ6ZSu5pON5L2cIiwiY2hpbGRyZW4iOltdfSx7InRpdGxlIjoi6aaW5qyh6YWN572uIFdpLUZpIiwiYW5jaG9yIjoiI+mmluasoemFjee9ri13aS1maSIsImNoaWxkcmVuIjpbXX0seyJ0aXRsZSI6IuS9v+eUqOaJi+acuuS4iuS8oOWbm+iJsuWbvueJhyIsImFuY2hvciI6IiPkvb/nlKjmiYvmnLrkuIrkvKDlm5voibLlm77niYciLCJjaGlsZHJlbiI6W119LHsidGl0bGUiOiLpgJrov4flsYDln5/nvZHkuIrkvKDlm77niYciLCJhbmNob3IiOiIj6YCa6L+H5bGA5Z+f572R5LiK5Lyg5Zu+54mHIiwiY2hpbGRyZW4iOltdfV19LHsidGl0bGUiOiLova/ku7blvIDlj5EiLCJhbmNob3IiOiIj6L2v5Lu25byA5Y+RIiwiY2hpbGRyZW4iOlt7InRpdGxlIjoi5byA5rqQ6aG555uuIiwiYW5jaG9yIjoiI+W8gOa6kOmhueebriIsImNoaWxkcmVuIjpbXX0seyJ0aXRsZSI6IumAieaLqSBOT1RFNEMg6Z2i5p2/IiwiYW5jaG9yIjoiI+mAieaLqS1ub3RlNGMt6Z2i5p2/IiwiY2hpbGRyZW4iOltdfSx7InRpdGxlIjoi5LuT5bqT6IyD5Zu0IiwiYW5jaG9yIjoiI+S7k+W6k+iMg+WbtCIsImNoaWxkcmVuIjpbXX1dfSx7InRpdGxlIjoi5a6Y5pa55Zmo5Lu26LWE5paZIiwiYW5jaG9yIjoiI+WumOaWueWZqOS7tui1hOaWmSIsImNoaWxkcmVuIjpbXX0seyJ0aXRsZSI6IuaUr+aMgei+ueeVjCIsImFuY2hvciI6IiPmlK/mjIHovrnnlYwiLCJjaGlsZHJlbiI6W119XX1d" :page-id="19" sidebar="W3siaSI6InNkaS0xIiwiayI6ImhlYWRlciIsImwiOiLlv6vpgJ/lvIDlp4siLCJjIjpudWxsLCJ5IjpudWxsLCJ0IjpudWxsfSx7ImkiOiJzZGktMiIsImsiOiJsaW5rIiwibCI6IuW/q+mAn+W8gOWniyIsImMiOiJtZGktY29tbWVudC1mbGFzaCIsInkiOiJwYWdlIiwidCI6Ii96aC9oYXJkd2FyZS9pbnRybyJ9LHsiaSI6InNkaS0zIiwiayI6ImxpbmsiLCJsIjoi5bCP56iL5bqP5L2/55So5oyH5Y2XIiwiYyI6Im1kaS1jaGV2cm9uLXJpZ2h0IiwieSI6InBhZ2UiLCJ0IjoiL3poL2hlbHAvYXBwIn0seyJpIjoic2RpLTQiLCJrIjoiZGl2aWRlciIsImwiOm51bGwsImMiOm51bGwsInkiOm51bGwsInQiOm51bGx9LHsiaSI6InNkaS01IiwiayI6ImhlYWRlciIsImwiOiLnoazku7bkuqflk4HlupMiLCJjIjpudWxsLCJ5IjpudWxsLCJ0IjpudWxsfSx7ImkiOiJzZGktNiIsImsiOiJsaW5rIiwibCI6IlplY3RyaXggTm90ZSA0IiwiYyI6Im1kaS1tZW1vcnkiLCJ5IjoicGFnZSIsInQiOiIvemgvaGFyZHdhcmUvbm90ZS9zcGVjIn0seyJpIjoic2RpLTciLCJrIjoibGluayIsImwiOiJaZWN0cml4IE5vdGUgNEMiLCJjIjoibWRpLW1lbW9yeSIsInkiOiJwYWdlIiwidCI6Ii96aC9oYXJkd2FyZS9ub3RlNGMvc3BlYyJ9LHsiaSI6InNkaS04IiwiayI6ImRpdmlkZXIiLCJsIjpudWxsLCJjIjpudWxsLCJ5IjpudWxsLCJ0IjpudWxsfSx7ImkiOiJzZGktOSIsImsiOiJoZWFkZXIiLCJsIjoi6L2v5Lu25byA5Y+R5oyH5Y2XIiwiYyI6bnVsbCwieSI6bnVsbCwidCI6bnVsbH0seyJpIjoic2RpLTEwIiwiayI6ImxpbmsiLCJsIjoi5a6Y5pa55Zu65Lu2IiwiYyI6Im1kaS1maWxlLWNvZGUtb3V0bGluZSIsInkiOiJwYWdlIiwidCI6Ii96aC9zb2Z0d2FyZS9maXJtd2FyZSJ9LHsiaSI6InNkaS0xMSIsImsiOiJsaW5rIiwibCI6Ik5PVEU0IOW8gOWPkeaMh+WNlyIsImMiOiJtZGktY29kZS1icmFjZXMiLCJ5IjoicGFnZSIsInQiOiIvemgvc29mdHdhcmUvbm90ZTQtZGV2ZWxvcG1lbnQtZ3VpZGUifSx7ImkiOiJzZGktMTIiLCJrIjoibGluayIsImwiOiJOT1RFNEMg5byA5Y+R5oyH5Y2XIiwiYyI6Im1kaS1jb2RlLWJyYWNlcyIsInkiOiJwYWdlIiwidCI6Ii96aC9oYXJkd2FyZS9ub3RlNGMvcXVpY2stc3RhcnQifSx7ImkiOiJzZGktMTMiLCJrIjoibGluayIsImwiOiLlvIDmupDlhoXlrrnlkozorqHliJIiLCJjIjoibWRpLWFwcHMiLCJ5IjoicGFnZSIsInQiOiIvemgvc29mdHdhcmUvb3BlbnNvdXJjZSJ9LHsiaSI6InNkaS0xNCIsImsiOiJkaXZpZGVyIiwibCI6bnVsbCwiYyI6bnVsbCwieSI6bnVsbCwidCI6bnVsbH0seyJpIjoic2RpLTE1IiwiayI6ImhlYWRlciIsImwiOiLmianlsZXkuI7mj5Lku7YiLCJjIjpudWxsLCJ5IjpudWxsLCJ0IjpudWxsfSx7ImkiOiJzZGktMTYiLCJrIjoibGluayIsImwiOiJBUEkg5paH5qGjIiwiYyI6Im1kaS1jaGV2cm9uLXJpZ2h0IiwieSI6InBhZ2UiLCJ0IjoiL3poL3NvZnR3YXJlL2FwaS1kb2NzIn0seyJpIjoic2RpLTE3IiwiayI6ImxpbmsiLCJsIjoi56S+5Yy65byA5rqQ5o+S5Lu2IiwiYyI6Im1kaS1hcnJhbmdlLWJyaW5nLWZvcndhcmQiLCJ5IjoicGFnZSIsInQiOiIvemgvc29mdHdhcmUvQ29tbXVuaXR5LU9wZW5Tb3VyY2UifSx7ImkiOiJzZGktMTgiLCJrIjoibGluayIsImwiOiLnpL7ljLrlvIDmupDlm7rku7YiLCJjIjoibWRpLWF1ZGlvLXZpZGVvIiwieSI6InBhZ2UiLCJ0IjoiL3poL3NvZnR3YXJlL0NvbW11bml0eS1PcGVuU291cmNlLUZpcm13YXJlIn0seyJpIjoic2RpLTE5IiwiayI6ImxpbmsiLCJsIjoi56S+5Yy65byA5rqQ5aSW5aOzIiwiYyI6Im1kaS1iYXNrZXRiYWxsLWhvb3AiLCJ5IjoicGFnZSIsInQiOiIvemgvc29mdHdhcmUvQ29tbXVuaXR5LU9wZW5Tb3VyY2UtY2FzZSJ9LHsiaSI6InNkaS0yMCIsImsiOiJkaXZpZGVyIiwibCI6bnVsbCwiYyI6bnVsbCwieSI6bnVsbCwidCI6bnVsbH0seyJpIjoic2RpLTIxIiwiayI6ImhlYWRlciIsImwiOiLmlK/mjIHkuI7luK7liqkiLCJjIjpudWxsLCJ5IjpudWxsLCJ0IjpudWxsfSx7ImkiOiJzZGktMjIiLCJrIjoibGluayIsImwiOiLluLjop4Hpl67popgiLCJjIjoibWRpLWhlbHAtYm94IiwieSI6InBhZ2UiLCJ0IjoiL3poL2hlbHAvZmFxIn0seyJpIjoic2RpLTIzIiwiayI6ImxpbmsiLCJsIjoi5paw5Yqf6IO96K+05piOIiwiYyI6Im1kaSBtZGktc3Rhci1jaXJjbGUtb3V0bGluZSIsInkiOiJwYWdlIiwidCI6Ii96aC9oZWxwL2ZlYXR1cmUtZ3VpZGUifSx7ImkiOiJzZGktMjQiLCJrIjoibGluayIsImwiOiLmm7TmlrDml6Xlv5ciLCJjIjoibWRpLXVwZGF0ZSIsInkiOiJwYWdlIiwidCI6Ii96aC9oZWxwL3VwZGF0ZV9sb2cifV0=" nav-mode="MIXED" comments-enabled effective-permissions="eyJjb21tZW50cyI6eyJyZWFkIjp0cnVlLCJ3cml0ZSI6dHJ1ZSwibWFuYWdlIjpmYWxzZX0sImhpc3RvcnkiOnsicmVhZCI6ZmFsc2V9LCJzb3VyY2UiOnsicmVhZCI6ZmFsc2V9LCJwYWdlcyI6eyJyZWFkIjp0cnVlLCJ3cml0ZSI6ZmFsc2UsIm1hbmFnZSI6ZmFsc2UsImRlbGV0ZSI6ZmFsc2UsInNjcmlwdCI6ZmFsc2UsInN0eWxlIjpmYWxzZX0sInN5c3RlbSI6eyJtYW5hZ2UiOmZhbHNlfX0=" edit-shortcuts="eyJlZGl0RmFiIjp0cnVlLCJlZGl0TWVudUJhciI6ZmFsc2UsImVkaXRNZW51QnRuIjp0cnVlLCJlZGl0TWVudUV4dGVybmFsQnRuIjp0cnVlLCJlZGl0TWVudUV4dGVybmFsTmFtZSI6IkdpdEh1YiIsImVkaXRNZW51RXh0ZXJuYWxJY29uIjoibWRpLWdpdGh1YiIsImVkaXRNZW51RXh0ZXJuYWxVcmwiOiJodHRwczovL2dpdGh1Yi5jb20vb3JnL3JlcG8vYmxvYi9tYWluL3tmaWxlbmFtZX0ifQ==" filename="zh/hardware/note4c/quick-start.md"><template slot="contents"><div><h1 id="zectrix-note4c-开发套件开发指南" class="toc-header"><a class="toc-anchor" href="#zectrix-note4c-开发套件开发指南">¶</a> ZECTRIX NOTE4C 开发套件开发指南</h1>
+<blockquote>
+<p><strong>硬件适用范围：</strong> 本指南仅适用于四色屏 <strong>ZECTRIX NOTE4C 开发套件</strong>（PCB 版本 <strong>1.0</strong>）：ESP32-S3 N16R8，配备 4.2 英寸 400 × 300 黑、白、红、黄四色电子墨水屏。除显示面板及其刷新行为外，NOTE4C 与黑白屏 NOTE4 开发套件使用相同的控制板、按键、音频、电源系统、USB 接口和外壳。两者的显示固件镜像不可混用。</p>
+</blockquote>
+<img src="/note4c-devkit-controls-ports-en.png" alt="ZECTRIX NOTE4C 开发套件按键与接口" width="760" height="740" style="display:block;width:100%;max-width:760px;height:auto;aspect-ratio:38/37;">
+<h2 id="产品说明" class="toc-header"><a class="toc-anchor" href="#产品说明">¶</a> 产品说明</h2>
+<p>ZECTRIX NOTE4C 开发套件是一款组装完成的 ESP32-S3 四色电子墨水屏开发平台，适用于低功耗信息显示、电子标签、照片卡片、状态面板和自定义嵌入式项目。设备在一个成品中集成了显示屏、控制板、可充电电池、麦克风、扬声器、RTC、NFC、实体按键、USB Type-C、磁吸背板和外壳。</p>
+<p>NOTE4C 是开放式开发设备，不包含开箱即用的消费版 NOTE4 固件、官方 NOTE4 AI 语音任务体验或 NOTE4 云服务。公开参考固件提供基础 Wi-Fi 配置、图片传输、四色屏测试和二次开发能力。</p>
+<h2 id="从这里开始" class="toc-header"><a class="toc-anchor" href="#从这里开始">¶</a> 从这里开始</h2>
+<ul>
+<li><a href="https://zectrix.com/en/note4c.html" class="is-external-link">NOTE4C 开发套件官方产品页</a></li>
+<li><a href="https://github.com/LazyYoun/youn-ink-fourcolor-firmware" class="is-external-link">NOTE4C 参考固件与源码</a></li>
+<li><a href="https://github.com/LazyYoun/youn-ink-fourcolor-firmware/blob/2bp/README.md" class="is-external-link">固件仓库 README</a></li>
+<li><a href="/notellm-2bp-v6.5.9-2bp-3fbbabb-20260705-mergebin.bin" class="is-asset-link">下载可直接刷写的 NOTE4C 合并固件</a></li>
+<li><a href="https://zectrix.com/en/firmware-updater.html" class="is-external-link">ZECTRIX 浏览器固件更新工具与下载模式说明</a></li>
+<li><a href="/zh/software/note4-development-guide" class="is-internal-link is-valid-page">黑白屏 NOTE4 开发套件开发指南</a></li>
+</ul>
+<h2 id="重要说明" class="toc-header"><a class="toc-anchor" href="#重要说明">¶</a> 重要说明</h2>
+<ul>
+<li>刷写前请确认设备是四色屏 NOTE4C，绝不要向 NOTE4C 安装黑白屏 NOTE4 固件镜像。</li>
+<li>PCB 版本 1.0 包含 NFC。未来的国际消费量产版可能取消 NFC，购买前请向 ZECTRIX 客服确认 NFC 配置。</li>
+<li>安装第三方固件或更改分区表前，请完整备份 16 MB 原厂 Flash。</li>
+<li>请使用支持数据传输的 USB 线。仅支持充电的线缆可以为设备供电，但不会显示串口。</li>
+<li>四色屏全屏刷新通常需要 10 秒以上。刷新过程中的闪烁、短暂颜色反转或可见色粉移动均属正常现象。</li>
+<li>电子墨水屏无需持续供电也会保留最后一幅画面。屏幕上有画面并不表示设备仍在运行。</li>
+<li>本指南后文描述的是预编译参考固件的按键行为。其他固件项目可以为相同硬件输入定义不同的应用行为。</li>
+</ul>
+<h2 id="主要特性" class="toc-header"><a class="toc-anchor" href="#主要特性">¶</a> 主要特性</h2>
+<ul>
+<li>ESP32-S3 N16R8，16 MB Flash、8 MB PSRAM</li>
+<li>4.2 英寸 400 × 300 黑、白、红、黄四色电子墨水屏</li>
+<li>SSD2683 显示控制器和 2 bpp BWRY 输出</li>
+<li>2.4 GHz Wi-Fi 与 Bluetooth LE 5.0</li>
+<li>集成麦克风、扬声器、ES8311 音频编解码器、PCF8563 RTC、NFC 和状态 LED</li>
+<li>三个实体用户按键及一个内凹 RESET 针孔</li>
+<li>USB Type-C 供电、原生 USB 数据、固件刷写与串口监视</li>
+<li>2,000+ mAh 可充电电池</li>
+</ul>
+<h2 id="包装内容" class="toc-header"><a class="toc-anchor" href="#包装内容">¶</a> 包装内容</h2>
+<ul>
+<li>1 × ZECTRIX NOTE4C 开发套件</li>
+<li>1 × 桌面支架</li>
+<li>已组装的四色显示屏、控制板、电池、外壳、按键和磁吸背板</li>
+<li>在线参考固件、源码和开发资料</li>
+</ul>
+<h2 id="典型应用" class="toc-header"><a class="toc-anchor" href="#典型应用">¶</a> 典型应用</h2>
+<ul>
+<li>四色天气、日历、任务和状态看板</li>
+<li>电子标签和低频更新信息面板</li>
+<li>电子墨水照片卡片和画廊显示</li>
+<li>支持语音的 ESP32-S3 交互界面</li>
+<li>NFC 触发工作流和智能标签</li>
+<li>四色屏驱动、电源管理和嵌入式 UI 开发</li>
+<li>家庭自动化面板和自定义 IoT 终端</li>
+</ul>
+<h2 id="规格参数" class="toc-header"><a class="toc-anchor" href="#规格参数">¶</a> 规格参数</h2>
+<div class="table-container"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>规格</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>产品</td>
+<td>ZECTRIX NOTE4C Devkit</td>
+</tr>
+<tr>
+<td>PCB 版本</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>主控</td>
+<td>ESP32-S3 N16R8</td>
+</tr>
+<tr>
+<td>Flash / PSRAM</td>
+<td>16 MB Flash / 8 MB PSRAM</td>
+</tr>
+<tr>
+<td>无线连接</td>
+<td>2.4 GHz Wi-Fi、Bluetooth LE 5.0</td>
+</tr>
+<tr>
+<td>显示屏</td>
+<td>4.2 英寸四色电子墨水屏</td>
+</tr>
+<tr>
+<td>显示颜色</td>
+<td>黑、白、红、黄</td>
+</tr>
+<tr>
+<td>分辨率</td>
+<td>400 × 300 像素</td>
+</tr>
+<tr>
+<td>显示控制器</td>
+<td>SSD2683</td>
+</tr>
+<tr>
+<td>显示格式</td>
+<td>2 bpp BWRY</td>
+</tr>
+<tr>
+<td>刷新</td>
+<td>全屏刷新；每幅画面通常需要 10 秒以上</td>
+</tr>
+<tr>
+<td>音频</td>
+<td>ES8311 编解码器、麦克风、扬声器</td>
+</tr>
+<tr>
+<td>RTC</td>
+<td>PCF8563</td>
+</tr>
+<tr>
+<td>NFC</td>
+<td>PCB 版本 1.0 包含</td>
+</tr>
+<tr>
+<td>操作键</td>
+<td>上键、下键 / 电源键、BOOT / 确认键、内凹 RESET</td>
+</tr>
+<tr>
+<td>USB</td>
+<td>USB Type-C 供电、原生 USB 数据、刷写和串口</td>
+</tr>
+<tr>
+<td>电池</td>
+<td>2,000+ mAh 可充电电池</td>
+</tr>
+<tr>
+<td>尺寸</td>
+<td>97 × 97 × 8.75 mm（含磁吸后盖）</td>
+</tr>
+<tr>
+<td>外壳</td>
+<td>ABS</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="按键与接口" class="toc-header"><a class="toc-anchor" href="#按键与接口">¶</a> 按键与接口</h2>
+<p>本指南顶部给出了按键与接口示意图。屏幕朝向使用者时：</p>
+<div class="table-container"><table>
+<thead>
+<tr>
+<th>实体按键或接口</th>
+<th>硬件信号</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>右侧上键</td>
+<td>GPIO39</td>
+<td>上键，低电平有效</td>
+</tr>
+<tr>
+<td>右侧下键</td>
+<td>GPIO18</td>
+<td>下键 / 电源相关输入，低电平有效</td>
+</tr>
+<tr>
+<td>正面圆形按键</td>
+<td>GPIO0</td>
+<td>BOOT / 确认，低电平有效；启动配置引脚</td>
+</tr>
+<tr>
+<td>圆形按键旁的正面小针孔</td>
+<td>麦克风输入</td>
+<td>连接到 ES8311 音频通路</td>
+</tr>
+<tr>
+<td>扬声器孔列最右端的独立小孔</td>
+<td>GPIO3</td>
+<td>状态 LED</td>
+</tr>
+<tr>
+<td>左侧 RESET 针孔，与下键等高</td>
+<td>ESP32-S3 EN / RST</td>
+<td>短按可复位主控</td>
+</tr>
+<tr>
+<td>底部中央 USB Type-C 接口</td>
+<td>USB D- GPIO19、USB D+ GPIO20</td>
+<td>供电、原生 USB 数据、刷写和串口</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="电源与复位" class="toc-header"><a class="toc-anchor" href="#电源与复位">¶</a> 电源与复位</h2>
+<p>GPIO17 控制主板的电源保持电路。使用电池运行的固件必须在启动后维持所需的电源锁存状态。GPIO18 同时连接到下键 / 电源键，因此开机、关机和长按行为取决于所安装的固件。</p>
+<p>左侧内凹针孔是硬件 RESET 输入，连接 ESP32-S3 的 EN / RST 信号，不会清除固件或用户数据。</p>
+<h2 id="进入-esp32-s3-下载模式" class="toc-header"><a class="toc-anchor" href="#进入-esp32-s3-下载模式">¶</a> 进入 ESP32-S3 下载模式</h2>
+<p>大多数电脑无需按键即可连接 NOTE4C 开发套件。如果浏览器更新工具或 <code>esptool</code> 无法识别设备：</p>
+<ol>
+<li>保持 USB Type-C 数据线连接。</li>
+<li>按住正面的圆形 <strong>BOOT / 确认</strong> 按键（GPIO0）。</li>
+<li>保持 BOOT 按下，同时短按一次左侧内凹 <strong>RESET</strong> 针孔。</li>
+<li>松开 BOOT。</li>
+<li>重新连接，并选择新出现的 ESP32-S3 串口设备。</li>
+</ol>
+<p>以上操作会让 ESP32-S3 手动进入 ROM 下载模式。正常重启后设备会恢复常规运行。</p>
+<h2 id="引脚映射" class="toc-header"><a class="toc-anchor" href="#引脚映射">¶</a> 引脚映射</h2>
+<h3 id="电子墨水屏接口" class="toc-header"><a class="toc-anchor" href="#电子墨水屏接口">¶</a> 电子墨水屏接口</h3>
+<p>控制器侧的电子墨水屏信号与 NOTE4 共用，但安装的面板和固件配置不同。</p>
+<div class="table-container"><table>
+<thead>
+<tr>
+<th>功能</th>
+<th style="text-align:right">ESP32-S3 GPIO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>电子墨水屏电源使能</td>
+<td style="text-align:right">6</td>
+</tr>
+<tr>
+<td>BUSY</td>
+<td style="text-align:right">8</td>
+</tr>
+<tr>
+<td>RESET</td>
+<td style="text-align:right">9</td>
+</tr>
+<tr>
+<td>DC</td>
+<td style="text-align:right">10</td>
+</tr>
+<tr>
+<td>CS</td>
+<td style="text-align:right">11</td>
+</tr>
+<tr>
+<td>SCK</td>
+<td style="text-align:right">12</td>
+</tr>
+<tr>
+<td>MOSI / SDA</td>
+<td style="text-align:right">13</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="按键-led-电池与充电" class="toc-header"><a class="toc-anchor" href="#按键-led-电池与充电">¶</a> 按键、LED、电池与充电</h3>
+<div class="table-container"><table>
+<thead>
+<tr>
+<th>功能</th>
+<th style="text-align:right">ESP32-S3 GPIO</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BOOT / 确认</td>
+<td style="text-align:right">0</td>
+<td>低电平有效；启动配置引脚</td>
+</tr>
+<tr>
+<td>充满 / 待机</td>
+<td style="text-align:right">1</td>
+<td><code>STDBY_H</code></td>
+</tr>
+<tr>
+<td>充电状态</td>
+<td style="text-align:right">2</td>
+<td><code>CHRG_L</code></td>
+</tr>
+<tr>
+<td>状态 LED</td>
+<td style="text-align:right">3</td>
+<td>绿色 LED</td>
+</tr>
+<tr>
+<td>电池电压 ADC</td>
+<td style="text-align:right">4</td>
+<td>通过电阻分压读取电池电压</td>
+</tr>
+<tr>
+<td>RTC 中断</td>
+<td style="text-align:right">5</td>
+<td>PCF8563 中断</td>
+</tr>
+<tr>
+<td>NFC 场检测</td>
+<td style="text-align:right">7</td>
+<td>NFC 场检测信号</td>
+</tr>
+<tr>
+<td>电源保持</td>
+<td style="text-align:right">17</td>
+<td>主板电源锁存控制</td>
+</tr>
+<tr>
+<td>下键 / 电源键</td>
+<td style="text-align:right">18</td>
+<td>低电平有效</td>
+</tr>
+<tr>
+<td>NFC 电源控制</td>
+<td style="text-align:right">21</td>
+<td>NFC 掉电 / 使能控制</td>
+</tr>
+<tr>
+<td>上键</td>
+<td style="text-align:right">39</td>
+<td>低电平有效</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="音频接口" class="toc-header"><a class="toc-anchor" href="#音频接口">¶</a> 音频接口</h3>
+<div class="table-container"><table>
+<thead>
+<tr>
+<th>功能</th>
+<th style="text-align:right">ESP32-S3 GPIO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I2S MCLK</td>
+<td style="text-align:right">14</td>
+</tr>
+<tr>
+<td>I2S BCLK / SCLK</td>
+<td style="text-align:right">15</td>
+</tr>
+<tr>
+<td>编解码器 DOUT / ESP32 RX</td>
+<td style="text-align:right">16</td>
+</tr>
+<tr>
+<td>I2S LRCK / WS</td>
+<td style="text-align:right">38</td>
+</tr>
+<tr>
+<td>音频电源使能</td>
+<td style="text-align:right">42</td>
+</tr>
+<tr>
+<td>编解码器 DIN / ESP32 TX</td>
+<td style="text-align:right">45</td>
+</tr>
+<tr>
+<td>扬声器功放控制</td>
+<td style="text-align:right">46</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="i2c-外设" class="toc-header"><a class="toc-anchor" href="#i2c-外设">¶</a> I2C 外设</h3>
+<div class="table-container"><table>
+<thead>
+<tr>
+<th>信号 / 外设</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I2C SDA</td>
+<td>GPIO47</td>
+</tr>
+<tr>
+<td>I2C SCL</td>
+<td>GPIO48</td>
+</tr>
+<tr>
+<td>PCF8563 RTC 地址</td>
+<td><code>0x51</code></td>
+</tr>
+<tr>
+<td>NFC 接口地址</td>
+<td><code>0x55</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="usb-与-uart" class="toc-header"><a class="toc-anchor" href="#usb-与-uart">¶</a> USB 与 UART</h3>
+<div class="table-container"><table>
+<thead>
+<tr>
+<th>功能</th>
+<th style="text-align:right">ESP32-S3 GPIO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>USB D-</td>
+<td style="text-align:right">19</td>
+</tr>
+<tr>
+<td>USB D+</td>
+<td style="text-align:right">20</td>
+</tr>
+<tr>
+<td>UART0 TX</td>
+<td style="text-align:right">43</td>
+</tr>
+<tr>
+<td>UART0 RX</td>
+<td style="text-align:right">44</td>
+</tr>
+</tbody>
+</table></div>
+<p>所有 GPIO 信号均使用 3.3 V 逻辑电平，请勿向 GPIO 直接输入 5 V。</p>
+<h2 id="原理图" class="toc-header"><a class="toc-anchor" href="#原理图">¶</a> 原理图</h2>
+<ul>
+<li><a href="/sch_zectrix_note4_developer_kit_v1.0_en.pdf" class="is-asset-link">下载 V1.0 共用控制板英文标注原理图 PDF</a></li>
+</ul>
+<p>NOTE4C PCB 版本 1.0 与该原理图中的 NOTE4 开发套件使用相同的控制板和外设映射。安装的电子墨水面板及其所需的固件配置不同，开发时请使用下文所述的 NOTE4C 四色面板配置。</p>
+<h2 id="刷写参考固件" class="toc-header"><a class="toc-anchor" href="#刷写参考固件">¶</a> 刷写参考固件</h2>
+<h3 id="可直接刷写的合并镜像" class="toc-header"><a class="toc-anchor" href="#可直接刷写的合并镜像">¶</a> 可直接刷写的合并镜像</h3>
+<p>以下合并镜像来自此前公开的 NOTE4C 开源参考固件版本。下一节的简易操作说明也以这个镜像为准。</p>
+<div class="table-container"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>下载</td>
+<td><a href="/notellm-2bp-v6.5.9-2bp-3fbbabb-20260705-mergebin.bin" class="is-asset-link">NOTE4C 合并固件</a></td>
+</tr>
+<tr>
+<td>文件名</td>
+<td><code>notellm-2bp-v6.5.9-2bp-3fbbabb-20260705-mergebin.bin</code></td>
+</tr>
+<tr>
+<td>目标硬件</td>
+<td>ESP32-S3 NOTE4C 四色屏硬件</td>
+</tr>
+<tr>
+<td>文件类型</td>
+<td>合并固件镜像</td>
+</tr>
+<tr>
+<td>写入地址</td>
+<td><code>0x0000</code></td>
+</tr>
+<tr>
+<td>文件大小</td>
+<td>3,054,752 字节</td>
+</tr>
+<tr>
+<td>SHA-256</td>
+<td><code>26f209f7cdea8f62bff73f2e877e3ab421917c17497a2a23340129c6ef43fc36</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>刷写前请核对文件名、文件大小和校验值。不要将此镜像写入黑白屏 NOTE4。</p>
+<h3 id="推荐zectrix-浏览器固件更新工具" class="toc-header"><a class="toc-anchor" href="#推荐zectrix-浏览器固件更新工具">¶</a> 推荐：ZECTRIX 浏览器固件更新工具</h3>
+<p><a href="https://zectrix.com/en/firmware-updater.html" class="is-external-link">ZECTRIX 浏览器固件更新工具</a>通过 USB 直连安装本地 <code>.bin</code> 文件。浏览器只在本地读取固件文件，不会将其上传到 ZECTRIX。</p>
+<ol>
+<li>在桌面版 Chrome 或 Edge 中打开更新工具。Safari 和 Firefox 不提供所需的 Web Serial 连接能力。</li>
+<li>使用 USB 数据线将 NOTE4C 开发套件直接连接到电脑。</li>
+<li>点击 <strong>连接设备</strong>，选择 ZECTRIX / ESP32-S3 USB 串口设备。</li>
+<li>选择已经下载的合并 <code>.bin</code> 固件文件。</li>
+<li>选择是否保留设备设置。推荐选项会备份设置分区，并在安装后恢复；需要全新配置时再取消该选项。</li>
+<li>核对固件文件名，并确认写入地址为 <code>0x0000</code>。</li>
+<li>点击 <strong>安装固件</strong>，在安装完成前保持数据线连接。</li>
+<li>允许更新工具重启设备。如有需要，可在安装结果出现后使用 <strong>再次重启</strong>。</li>
+</ol>
+<p>如果设备无法连接，请按上文的 BOOT / RESET 顺序进入下载模式，然后再次点击 <strong>连接设备</strong>。</p>
+<h3 id="备选esptool" class="toc-header"><a class="toc-anchor" href="#备选esptool">¶</a> 备选：esptool</h3>
+<p>安装或更新 <code>esptool</code>：</p>
+<pre class="prismjs line-numbers" v-pre="true"><code class="language-bash">python3 -m pip install --upgrade esptool
+</code></pre>
+<p>在固件文件所在目录中执行：</p>
+<pre class="prismjs line-numbers" v-pre="true"><code class="language-bash">python3 -m esptool \
+  --chip esp32s3 \
+  --port /dev/cu.usbmodemXXXX \
+  --baud 460800 \
+  write-flash 0x0 notellm-2bp-v6.5.9-2bp-3fbbabb-20260705-mergebin.bin
+</code></pre>
+<p>请将串口名称替换为电脑实际识别到的设备端口。Windows 使用对应的 <code>COM</code> 端口，并在需要时将 <code>python3</code> 改为 <code>python</code>。合并镜像必须写入 <code>0x0</code>。</p>
+<h2 id="使用预编译参考固件" class="toc-header"><a class="toc-anchor" href="#使用预编译参考固件">¶</a> 使用预编译参考固件</h2>
+<p>本节行为适用于上文列出的可直接刷写镜像。自行编译的固件或仓库后续版本可能会有不同表现。</p>
+<h3 id="按键操作" class="toc-header"><a class="toc-anchor" href="#按键操作">¶</a> 按键操作</h3>
+<ul>
+<li>短按上键：上一项或上一页。</li>
+<li>短按下键：下一项或下一页。</li>
+<li>短按 BOOT：确认。</li>
+<li>双击上键：打开快速页面切换。</li>
+<li>长按下键约 1 秒：打开“设置”。</li>
+<li>同时长按上键和下键约 1 秒：进入 Wi-Fi 配网。</li>
+<li>在“相册”页长按 BOOT：进入热点传图模式。</li>
+<li>在热点传图页长按 BOOT：退出传图模式。</li>
+<li>深度休眠后按 BOOT：唤醒设备。</li>
+</ul>
+<p>每次四色屏刷新完成后再按下一个按键。</p>
+<h3 id="首次配置-wi-fi" class="toc-header"><a class="toc-anchor" href="#首次配置-wi-fi">¶</a> 首次配置 Wi-Fi</h3>
+<p>设备没有保存过网络时，固件通常会自动进入配网模式。如果没有自动进入：</p>
+<ol>
+<li>同时长按上键和下键约 1 秒。</li>
+<li>等待屏幕显示 Wi-Fi 配网。</li>
+<li>用手机连接名称以 <code>ZecTrix</code> 开头的开放热点。</li>
+<li>如果配网页面没有自动打开，请访问 <code>http://192.168.4.1</code>。</li>
+<li>选择 2.4 GHz Wi-Fi，输入密码并保存。</li>
+</ol>
+<p>ESP32-S3 无法连接仅提供 5 GHz Wi-Fi 的网络。如果配网成功后“相册”页仍显示旧的连接状态，请短按一次 RESET，或先切换到其他页面再返回。</p>
+<h3 id="使用手机上传四色图片" class="toc-header"><a class="toc-anchor" href="#使用手机上传四色图片">¶</a> 使用手机上传四色图片</h3>
+<ol>
+<li>使用上键和下键进入“相册”。</li>
+<li>长按 BOOT，进入热点传图模式。</li>
+<li>手机连接：</li>
+</ol>
+<pre class="prismjs line-numbers" v-pre="true"><code class="language-text">热点：InkScreen-AP
+密码：12345678
+</code></pre>
+<ol start="4">
+<li>在手机浏览器中打开 <code>http://192.168.4.1</code>。</li>
+<li>选择 <strong>2 BP 四色</strong> 转换模式。</li>
+<li>选择 JPG、PNG 或其他受支持的图片，并检查 400 × 300 预览。</li>
+<li>发送图片；如需立即显示，再选择“展示”。</li>
+</ol>
+<p>浏览器会缩放图片并将其转换为黑、白、红、黄四色，无需另行转换为 BIN。</p>
+<p>请勿混淆两个热点：</p>
+<ul>
+<li><code>ZecTrix...</code>：首次配置家庭 Wi-Fi；默认无密码。</li>
+<li><code>InkScreen-AP</code>：“相册”热点传图；密码为 <code>12345678</code>。</li>
+</ul>
+<h3 id="通过局域网上传图片" class="toc-header"><a class="toc-anchor" href="#通过局域网上传图片">¶</a> 通过局域网上传图片</h3>
+<p>NOTE4C 连接家庭网络后：</p>
+<ol>
+<li>在设备上打开“设置”。</li>
+<li>开启局域网服务。</li>
+<li>记下屏幕上显示的 IP 地址。</li>
+<li>在同一网络中的手机或电脑上打开 <code>http://设备IP/</code>，将“设备IP”替换为屏幕显示的地址。</li>
+</ol>
+<p>局域网页面支持上传图片、预览四色转换、显示和管理图片，以及设置轮播。DHCP 地址可能发生变化，请以设备当前显示的地址为准。</p>
+<h2 id="软件开发" class="toc-header"><a class="toc-anchor" href="#软件开发">¶</a> 软件开发</h2>
+<h3 id="开源项目" class="toc-header"><a class="toc-anchor" href="#开源项目">¶</a> 开源项目</h3>
+<p>公开仓库 <a href="https://github.com/LazyYoun/youn-ink-fourcolor-firmware" class="is-external-link">LazyYoun/youn-ink-fourcolor-firmware</a> 使用 <code>2bp</code> 作为默认分支，采用 MIT 许可证。仓库包含 ESP-IDF 固件，以及可选的服务器和管理组件。</p>
+<pre class="prismjs line-numbers" v-pre="true"><code class="language-bash">git clone https://github.com/LazyYoun/youn-ink-fourcolor-firmware.git
+cd youn-ink-fourcolor-firmware/firmware
+</code></pre>
+<p>当前仓库文档使用 ESP-IDF 6.0 环境。启用 ESP-IDF 环境后编译固件：</p>
+<pre class="prismjs line-numbers" v-pre="true"><code class="language-bash">idf.py set-target esp32s3
+idf.py menuconfig
+idf.py build
+idf.py -p /dev/cu.usbmodemXXXX flash monitor
+</code></pre>
+<p>请将 <code>/dev/cu.usbmodemXXXX</code> 替换为电脑实际识别到的串口。Windows 使用对应的 <code>COM</code> 端口。按 <code>Ctrl + ]</code> 退出串口监视器。</p>
+<h3 id="选择-note4c-面板" class="toc-header"><a class="toc-anchor" href="#选择-note4c-面板">¶</a> 选择 NOTE4C 面板</h3>
+<p>四色面板是仓库默认的 ZECTRIX 面板配置。在 <code>idf.py menuconfig</code> 中确认：</p>
+<pre class="prismjs line-numbers" v-pre="true"><code class="language-text">ZecTrix EPD panel type
+└── 4-color BWRY SSD2683 EPD
+</code></pre>
+<p>对应配置：</p>
+<pre class="prismjs line-numbers" v-pre="true"><code class="language-text">CONFIG_ZECTRIX_EPD_PANEL_4COLOR_SSD2683=y
+</code></pre>
+<p>为 NOTE4C 编译时，请勿选择 1 bpp 黑白面板。</p>
+<h3 id="仓库范围" class="toc-header"><a class="toc-anchor" href="#仓库范围">¶</a> 仓库范围</h3>
+<p>该仓库是持续演进的参考项目，不是消费版 NOTE4 固件。目前包含固件 UI 和显示代码、AP 热点传图、可选 Python 服务器组件，以及图片 / 设备管理功能。启用外部服务、API、OTA 地址或自定义分区前，请先阅读仓库当前的 README 和源码。不要提交 <code>.env</code> 文件、API Key、Wi-Fi 凭据、编译产物、日志或本地数据库。</p>
+<h2 id="官方器件资料" class="toc-header"><a class="toc-anchor" href="#官方器件资料">¶</a> 官方器件资料</h2>
+<ul>
+<li><a href="https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf" class="is-external-link">ESP32-S3 数据手册 - Espressif</a></li>
+<li><a href="https://www.nxp.com/docs/en/data-sheet/PCF8563.pdf" class="is-external-link">PCF8563 RTC 数据手册 - NXP</a></li>
+<li><a href="https://www.everest-semi.com/pdf/ES8311%20PB.pdf" class="is-external-link">ES8311 产品简介 - Everest Semiconductor</a></li>
+<li><a href="https://components.espressif.com/components/espressif/es8311/versions/1.0.0?language=en" class="is-external-link">ES8311 ESP-IDF 组件 - Espressif Component Registry</a></li>
+</ul>
+<p>NOTE4C 使用 SSD2683 显示控制器。目前本文未提供由厂商官网公开托管的 SSD2683 数据手册，请以 NOTE4C 原理图映射、面板配置和公开驱动源码作为开发参考。</p>
+<h2 id="支持边界" class="toc-header"><a class="toc-anchor" href="#支持边界">¶</a> 支持边界</h2>
+<p>NOTE4C 是开发设备。第三方固件、自定义分区表、服务器部署、外部 API 服务和硬件改装由开发者自行负责。安装前请保留经过验证的 16 MB Flash 备份，并记录准确的固件文件名、写入地址和校验值。如果怀疑硬件故障，请联系 ZECTRIX 支持，并提供设备型号、PCB 版本、固件文件名、复现步骤和现象照片或视频。</p>
+</div></template><template slot="comments"><div><comments></comments></div></template></page></div></body></html>

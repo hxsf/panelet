@@ -1,0 +1,12 @@
+{
+  "id": "com.note4c.calendar",
+  "name": "Calendar",
+  "version": "0.3.0",
+  "abi": "note4c.rune/3",
+  "capabilities": [
+    "time.read",
+    "screen.present",
+    "log.write"
+  ],
+  "host_permissions": []
+}

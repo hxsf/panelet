@@ -1,0 +1,11 @@
+{
+  "id": "com.note4c.todo",
+  "name": "TODO",
+  "version": "0.4.0",
+  "abi": "note4c.rune/3",
+  "capabilities": [
+    "http.fetch",
+    "screen.present"
+  ],
+  "host_permissions": []
+}

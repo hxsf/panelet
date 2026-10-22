@@ -1,0 +1,45 @@
+NOTE4C calendar/photo widget host and target build evidence
+Date: 2026-09-04
+Scope: local build only; no serial device, flash, backup image, token, or network service was accessed.
+
+Widget upload packages:
+  node --check examples/widgets/build-upload.mjs
+  node examples/widgets/build-upload.mjs calendar > /tmp/note4c-calendar.json
+  node examples/widgets/build-upload.mjs photo-album > /tmp/note4c-photo-album.json
+
+  calendar:    RPC 4,863 B; Rune source 4,120 B; 1 resource; path+text 24 B
+  photo-album: RPC 5,154 B; Rune source 4,040 B; 4 resources; path+text 301 B
+
+Host verification:
+  cargo +stable test --workspace --exclude note4c-test-runner \
+    --all-features --target aarch64-apple-darwin
+
+  Result: passed. The ABI suite executed calendar once and photo-album three
+  times against FakeIo, captured each Canvas frame, checked expected text,
+  quotas, and the widget-private KV transitions.
+
+Target build:
+  The existing local ESP-IDF v5.5.3 checkout, Python environment, CMake,
+  Ninja, and Xtensa compiler under .embuild/espressif were activated directly.
+  ESP_IDF_TOOLS_INSTALL_DIR=fromenv and ESP_IDF_COMPONENT_MANAGER=false kept
+  configuration offline; the repository rust-toolchain selected the ESP toolchain.
+
+  cargo build --release -p note4c-test-runner --features management-server
+
+  Result: finished release profile successfully.
+
+Image measurement:
+  ESPFLASH_SKIP_UPDATE_CHECK=true espflash save-image --chip esp32s3 \
+    --flash-size 16mb --skip-padding --merge \
+    --bootloader target/xtensa-esp32s3-espidf/release/bootloader.bin \
+    --partition-table app/test-runner/partitions-note4c-16m-ota.csv \
+    --target-app-partition ota_0 \
+    target/xtensa-esp32s3-espidf/release/note4c-test-runner \
+    /tmp/note4c-widget-examples-merged.bin
+
+  App/part. size: 3,655,120/4,128,768 bytes, 88.53%
+  Remaining app-slot capacity: 473,648 bytes
+  Merge size: 3,786,192 bytes
+  Merge SHA-256: 251cb638e5d8f6a017ff073a64c1ce284ba618f4a9b4524a634a825e03854086
+
+The merged image is temporary and was not copied into the repository or flashed.

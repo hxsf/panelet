@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "items": [
+    {"text": "提交项目进度报告", "important": true, "detail": "今天 14:00"},
+    {"text": "买牛奶和新鲜水果", "detail": "下班后去超市"},
+    {"text": "预约牙医", "detail": "这周完成"},
+    {"text": "Review pull request", "detail": "NOTE4C"},
+    {"text": "给阳台的花浇水"},
+    {"text": "整理本周读书笔记"},
+    {"text": "准备下周出差需要的文件和随身物品清单"},
+    {"text": "跑步三十分钟"},
+    {"text": "已经完成的任务不会显示", "completed": true}
+  ]
+}

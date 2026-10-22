@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: MPL-2.0
+
+[package]
+name = "panelet-rune-unit-compiler-poc"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+panelet-rune-abi-poc = { path = "../../crates/panelet-rune-abi-poc" }
+panelet-rune-runtime-only-poc = { path = "../../crates/panelet-rune-runtime-only-poc" }
+panelet-rune-unit-format-poc = { path = "../../crates/panelet-rune-unit-format-poc" }
+# This is intentionally the only package that uses Rune source/compiler APIs.
+rune = { version = "=0.14.2", default-features = false, features = ["std"] }
+ciborium = { version = "=0.2.2", default-features = false }

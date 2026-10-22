@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MPL-2.0
+
+# NOTE4C 16 MiB, optional single-application layout without firmware OTA.
+# This keeps both the Rust test runner's existing NVS range and the reference
+# firmware's 8 MiB assets range. It is intentionally not the build default.
+# Name,    Type, SubType, Offset,   Size,      Flags
+nvs,       data, nvs,     0x9000,   0x6000,
+phy_init,  data, phy,     0xf000,   0x1000,
+factory,   app,  factory, 0x10000,  0x7f0000,
+assets,    data, spiffs,  0x800000, 0x800000,

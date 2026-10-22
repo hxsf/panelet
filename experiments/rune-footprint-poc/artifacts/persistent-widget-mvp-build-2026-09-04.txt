@@ -1,0 +1,47 @@
+NOTE4C persistent widget MVP build evidence
+Date: 2026-09-04 Asia/Shanghai
+Host: Apple Silicon macOS
+Target: xtensa-esp32s3-espidf
+ESP-IDF: v5.5.3
+Profile: release (opt-level=s, LTO, codegen-units=1)
+
+Build:
+  cargo build --release -p note4c-test-runner --features management-server
+
+Result:
+  Finished release profile successfully.
+
+Included persistence/upload scope:
+  - binary POST /packages/v1 using strict STORE-only .n4w ZIP
+  - explicit assets SPIFFS initialization; no format-on-mount-failure
+  - persisted widget packages, active widget, KV, private files and shared blobs
+  - std.fs.private and std.fs.shared Rune facades
+
+Host tests:
+  cargo test --target aarch64-apple-darwin \
+    -p note4c-widget-package -p note4c-widget-store \
+    -p note4c-management -p note4c-rune-abi-poc
+
+Result:
+  note4c-management: 12 passed
+  note4c-rune-abi-poc: 14 passed
+  note4c-widget-package: 7 passed
+  note4c-widget-store: 10 passed
+
+Image measurement:
+  ESPFLASH_SKIP_UPDATE_CHECK=true espflash save-image --chip esp32s3 \
+    --flash-size 16mb --skip-padding --merge \
+    --bootloader target/xtensa-esp32s3-espidf/release/bootloader.bin \
+    --partition-table app/test-runner/partitions-note4c-16m-ota.csv \
+    --target-app-partition ota_0 \
+    target/xtensa-esp32s3-espidf/release/note4c-test-runner \
+    /tmp/note4c-mvp-XXXXXX.bin
+
+Result:
+  App/part. size: 3,797,216/4,128,768 bytes, 91.97%
+  Remaining app-slot capacity: 331,552 bytes
+  Merge size: 3,928,288 bytes
+  Merge SHA-256: c34942f6047bf54164a00ff6bbea639ea31b73a65bfc3f8da51d496992ef535a
+
+The merged image is temporary, was not copied into the repository, and was not flashed.
+No physical NOTE4C test was performed in this build step.

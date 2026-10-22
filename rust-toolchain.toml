@@ -1,0 +1,3 @@
+[toolchain]
+# Xtensa targets use Espressif's Rust toolchain, matching esp-idf-template.
+channel = "esp"

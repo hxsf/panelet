@@ -1,0 +1,108 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Panelet contributors
+// Permission and warranty terms are in resources/LICENSE.txt.
+
+struct Todo {}
+
+#[widget::component]
+impl Todo {
+    pub fn new() { Todo {} }
+    #[widget::mounted]
+    pub async fn mounted(self) { refresh().await }
+    #[widget::timer]
+    pub async fn timer(self) { refresh().await }
+    #[widget::input(click(boot))]
+    pub async fn input(self, event) { refresh().await }
+}
+
+use os::screen::{BLACK, WHITE, YELLOW, RED};
+
+fn text_or(node, key, fallback) {
+    let value = node.get(key)?;
+    if value.is_none() { return os::runtime::ok(fallback); }
+    let parsed = value.unwrap().string()?;
+    if parsed.is_none() { return os::runtime::fail("Expected a JSON string"); }
+    os::runtime::ok(parsed.unwrap())
+}
+
+fn bool_or(node, key, fallback) {
+    let value = node.get(key)?;
+    if value.is_none() { return os::runtime::ok(fallback); }
+    let parsed = value.unwrap().boolean()?;
+    if parsed.is_none() { return os::runtime::fail("Expected a JSON boolean"); }
+    os::runtime::ok(parsed.unwrap())
+}
+
+async fn refresh() {
+    let config = os::config::get()?;
+    let url = text_or(config, "url", "")?;
+    if url.is_empty() { return os::runtime::fail("Set the TODO API URL in widget configuration"); }
+    let token = text_or(config, "bearer_token", "")?;
+    let auth = text_or(config, "auth_type", if token.is_empty() { "none" } else { "bearer" })?;
+    if auth != "none" && !url.starts_with("https://") { return os::runtime::fail("Authentication requires HTTPS"); }
+    let request = os::http::request("GET", url)?;
+    request.add_header("Accept", "application/json")?;
+    request.set_timeout(10000)?;
+    request.set_max_redirects(0)?;
+    if auth == "basic" {
+        request.set_basic_auth(text_or(config, "username", "")?, text_or(config, "password", "")?)?;
+    } else if auth == "bearer" {
+        if token.is_empty() { return os::runtime::fail("Bearer token is empty"); }
+        let authorization = "Bearer ";
+        authorization.push_str(token);
+        request.add_header("Authorization", authorization)?;
+    } else if auth != "none" { return os::runtime::fail("Unsupported authentication type"); }
+    let response = os::http::fetch(request).await?;
+    if response.status != 200 { return os::runtime::fail("TODO API must return HTTP 200 with a full snapshot"); }
+    let feed = response.json()?;
+    let version = feed.get("version")?;
+    if version.is_none() { return os::runtime::fail("Missing TODO feed version"); }
+    let number = version.unwrap().integer()?;
+    if number.is_none() || number.unwrap() != 1 {
+        return os::runtime::fail("Unsupported TODO feed version");
+    }
+    let maybe_items = feed.get("items")?;
+    if maybe_items.is_none() { return os::runtime::fail("Missing TODO items"); }
+    let items = maybe_items.unwrap();
+    if items.kind()? != "array" || items.len()? > 64 { return os::runtime::fail("TODO items must be an array of at most 64 entries"); }
+    let canvas = os::screen::get_context()?;
+    canvas.clear(WHITE)?;
+    let title = text_or(config, "title", "待办事项")?;
+    canvas.text_sized([12, 8], os::screen::fit_text_sized(title, 376, 32)?, BLACK, 32)?;
+    canvas.fill_rect([12, 45, 376, 3], YELLOW)?;
+    let shown = 0;
+    let total = 0;
+    for index in 0..items.len()? {
+        let item = items.at(index)?.unwrap();
+        if item.kind()? != "object" { return os::runtime::fail("Invalid TODO item"); }
+        let text = text_or(item, "text", "")?;
+        if text.is_empty() || text.len() > 512 { return os::runtime::fail("TODO text must be 1..512 UTF-8 bytes"); }
+        let detail = text_or(item, "detail", "")?;
+        if detail.len() > 256 { return os::runtime::fail("TODO detail exceeds 256 UTF-8 bytes"); }
+        let completed = bool_or(item, "completed", false)?;
+        let important = bool_or(item, "important", false)?;
+        if !completed {
+            total += 1;
+            if shown < 6 {
+                let y = 52 + shown * 38;
+                let color = if important { RED } else { BLACK };
+                canvas.rect([13, y + 2, 12, 12], color)?;
+                canvas.text_sized([32, y], os::screen::fit_text_sized(text, 354, 18)?, color, 18)?;
+                if !detail.is_empty() {
+                    canvas.line([33, y + 28, 39, y + 28], BLACK)?;
+                    canvas.text_sized([44, y + 20], os::screen::fit_text_sized(detail, 342, 16)?, BLACK, 16)?;
+                }
+                shown += 1;
+            }
+        }
+    }
+    if total == 0 { canvas.text_sized([136, 134], "暂无待办", BLACK, 32)?; }
+    let footer = shown.to_string();
+    footer.push_str(" / ");
+    footer.push_str(total.to_string());
+    footer.push_str(" TODO");
+    canvas.line([12, 282, 387, 282], BLACK)?;
+    canvas.text_sized([12, 284], footer, BLACK, 16)?;
+    canvas.flush().await?;
+    os::runtime::ok(())
+}

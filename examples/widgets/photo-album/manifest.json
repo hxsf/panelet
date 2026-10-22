@@ -1,0 +1,12 @@
+{
+  "id": "sample.photo-album",
+  "name": "PHOTO ALBUM",
+  "version": "0.2.0",
+  "abi": "note4c.rune/3",
+  "capabilities": [
+    "screen.present",
+    "storage.kv",
+    "log.write"
+  ],
+  "host_permissions": []
+}

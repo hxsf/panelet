@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: MPL-2.0
+
+[package]
+name = "panelet-widget-package"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Strict STORE-only .pnw package codec for Panelet widgets"
+
+[dependencies]
+panelet-management = { path = "../panelet-management" }
+serde_json = "1"
+
+[lib]
+test = true

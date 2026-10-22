@@ -1,0 +1,91 @@
+GNU Unifont 16.0.04 - font notices for Panelet
+================================================
+
+Font license:
+  OFL-1.1 OR (GPL-2.0-or-later WITH Font-exception-2.0)
+
+The upstream font license choices remain available for the font data and
+Panelet's CJK and printable-ASCII subsets. The glyph shapes are unchanged;
+the font embedding exception is retained for these subsets. The surrounding
+Panelet source-code license does not replace the font licenses. This notice
+also does not apply the font license to independent documents or ordinary
+rendered images merely because they use the font.
+
+Upstream copyright metadata
+----------------------------
+The following is the COPYRIGHT value from the exact release's font/Makefile,
+with only Makefile line continuations removed:
+
+Copyright (C) 1998-2025 Roman Czyborra, Paul Hardy, Qianqian Fang, Andrew Miller, Johnnie Weaver, David Corbett, Nils Moskopp, Rebecca Bettencourt, Minseo Lee, Ho-Seok Ee, et al. License: SIL Open Font License version 1.1 and GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html> with the GNU Font Embedding Exception.
+
+Upstream author attribution
+----------------------------
+The following section is copied from the exact release's README. It credits
+principal contributors and points to the upstream ChangeLog for further
+details; it is not a claim that Panelet authored the font.
+
+Unifont AUTHORS
+---------------
+Roman Czyborra created the original GNU Unifont, including the
+.hex format.  For greater detail, see the HISTORY section below.
+
+David Starner aggregated many glyphs contributed by others and
+incorporated these into pre-2004 Unifont releases.
+
+Qianqian Fang began his Wen Quan Yi font in 2004, by which
+time work on Unifont had stopped.  Most of the almost 30,000
+CJK ideographs in Unifont versions 5.1 and later were taken
+from Wen Quan Yi with permission of Qianqian Fang.  The glyphs
+in "./font/plane00/wqy-cjk.hex" are for the most part Qianqian
+Fang's Unibit and Wen Quan Yi glyphs.
+
+Paul Hardy drew most of the newly-drawn glyphs added to the BMP
+from the Unifont 5.1 release to the present release.  This includes
+the 11,172 glyphs in the Hangul Syllables block, plus approximately
+10,000 additional glyphs scattered throughout the BMP.
+
+Andrew Miller drew the glyphs added to Unicode 6.3.0.
+
+For full details of software changes after Unicode 6.3.0, higher
+Unicode planes, and the Private Use Area glyphs, etc., see the
+ChangeLog file.
+
+License texts to retain
+-----------------------
+COPYING-16.0.04.txt is an unmodified copy of the exact source release's
+COPYING. It states the font's dual license, includes the GNU font embedding
+exception, and contains the OFL 1.1 and GPL v2 terms. Keep it with this notice.
+The repository also retains the previously retrieved LICENSE.txt and
+OFL-1.1.txt. Those generic texts do not replace the concrete font copyright
+and attribution above. Retain these four files when packaging the font data
+or its embedded subsets with Panelet releases.
+
+The source README contains an older GPL-only description of the font license;
+the exact release's COPYING explicitly provides both font license choices.
+The original source archive separately identifies the jiskan16 font files as
+public domain; this notice does not revoke that separate status.
+
+Provenance and integrity
+------------------------
+Notice assembled: 2026-10-22
+Official source archive:
+  https://ftp.gnu.org/gnu/unifont/unifont-16.0.04/unifont-16.0.04.tar.gz
+Archive SHA-256:
+  2bd4e4679757126f48e1bf2c1be40b09aa92162bfedda4683ce5fbc70a2a5972
+Upstream README SHA-256:
+  0c35716b811d92631b60c92c1ab6a650e5da486f82896c1e87aaef931eb9336a
+Upstream font/Makefile SHA-256:
+  510a927cbb713d96e084b6489dee3bbd35978e561e4993d61e20939c2dc81c20
+Upstream COPYING / local COPYING-16.0.04.txt SHA-256:
+  5a65797606332f2f63057fd81ea0ff35f74043583515bf900ee9b42efa8176a6
+Upstream OFL-1.1.txt SHA-256:
+  869692af094c57fb7258c57fe26820c759319603321d0ffeb278de3651763ded
+
+Existing font snapshot:
+  unifont_all-16.0.04.hex.gz
+  https://unifoundry.com/pub/unifont/unifont-16.0.04/font-builds/unifont_all-16.0.04.hex.gz
+Snapshot SHA-256:
+  20e8b505f602488697979eefc69857f7f6106bceab702f5ac559f4f84e0e7494
+
+These hashes record the retrieved bytes; they are not a claim that a release
+signature or every contribution's legal provenance has been verified.

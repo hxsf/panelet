@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: MPL-2.0
+
+[package]
+name = "panelet-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lib]
+test = true
+
+[dependencies]

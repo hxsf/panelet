@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: MPL-2.0
+
+[package]
+name = "panelet-os"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+build = "build.rs"
+
+[lib]
+name = "panelet_preview"
+path = "src/editor/lib.rs"
+# Ordinary host/firmware builds use an rlib; the browser build script explicitly
+# selects cdylib, which bare WASM supports but the ESP-IDF target does not.
+crate-type = ["rlib"]
+
+[[bin]]
+name = "panelet-os"
+harness = false
+required-features = ["firmware"]
+
+[[bin]]
+name = "panelet-studio"
+path = "src/editor/main.rs"
+required-features = ["desktop-editor"]
+
+[features]
+default = ["firmware"]
+firmware = []
+# The editor is a separate macOS/Linux executable, never linked into firmware.
+desktop-editor = []
+# Browser-only Rune/Canvas preview. The library is empty on firmware targets.
+browser-preview = []
+# Deliberately opt-in: this boots a Rune allocation/budget probe and emits
+# heap-capability samples before the normal button menu starts.
+rune-footprint-poc = ["dep:panelet-rune-footprint-poc"]
+# This deliberately is a different build variable from `rune-footprint-poc`:
+# it embeds a Unit compiled on the host and must not pull the host compiler
+# crate into the ESP-IDF target dependency graph.
+rune-runtime-only-footprint-poc = ["dep:panelet-rune-runtime-only-poc"]
+
+[dependencies]
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+panelet-core = { path = "../../crates/panelet-core" }
+panelet-management = { path = "../../crates/panelet-management" }
+panelet-rune-abi-poc = { path = "../../crates/panelet-rune-abi-poc" }
+panelet-widget-package = { path = "../../crates/panelet-widget-package" }
+panelet-widget-store = { path = "../../crates/panelet-widget-store" }
+panelet-ui = { path = "../../crates/panelet-ui" }
+serde_json = "1"
+rune = { version = "=0.14.2", default-features = false, features = ["std"] }
+ssd2683 = { path = "../../crates/ssd2683", features = ["experimental-partial-refresh"] }
+
+[target.'cfg(target_os = "espidf")'.dependencies]
+esp-idf-svc = "0.52.1"
+embedded-svc = "0.29.0"
+qrcodegen = "=1.8.0"
+panelet-rune-footprint-poc = { path = "../../crates/panelet-rune-footprint-poc", optional = true }
+panelet-rune-runtime-only-poc = { path = "../../crates/panelet-rune-runtime-only-poc", optional = true }
+
+[build-dependencies]
+embuild = { version = "0.33", features = ["espidf"] }

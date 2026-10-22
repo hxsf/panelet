@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: MPL-2.0
+
+[package]
+name = "panelet-ui"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+panelet-core = { path = "../panelet-core" }
+ssd2683 = { path = "../ssd2683" }

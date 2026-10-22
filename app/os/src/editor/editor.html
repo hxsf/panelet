@@ -1,0 +1,301 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panelet Studio · 小组件编辑器</title>
+<link rel="stylesheet" href="/editor.css">
+<style>
+.editor-shell{max-width:1510px;margin:auto;padding:28px 32px 50px}.editor-heading{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:22px}.editor-heading .brand{padding:0;font-size:17px}.editor-heading h1{font-size:23px;margin-top:5px}.editor-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(420px,1fr);gap:22px;align-items:start;margin-top:20px}.editor-column{display:grid;gap:18px;min-width:0}.preview-column{position:sticky;top:20px}.package-toolbar{display:flex;align-items:end;gap:12px;flex-wrap:wrap}.package-toolbar label{margin:0;flex:1;min-width:180px}.package-toolbar .file-label{max-width:280px}.package-toolbar input[type=file]{padding:8px}.editor-source{height:430px;tab-size:4}.json{min-height:140px}.manifest-json{min-height:225px}.preview-surface{background:#eef2ef;padding:18px 8px;border-radius:10px;display:grid;place-items:center;overflow:hidden;min-height:330px}.preview-surface canvas{width:400px;max-width:100%;height:auto;aspect-ratio:4/3;background:#fff;box-shadow:0 2px 14px #152a2020;image-rendering:pixelated}.preview-surface.stale canvas{opacity:.65}.preview-meta{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:12px 0}.preview-meta p{font-size:11px;color:var(--muted)}.preview-status{min-height:21px;font-size:12px;margin:12px 0;overflow-wrap:anywhere}.preview-status.error{color:var(--red)}.preview-status.success{color:var(--accent)}.key-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.key-group{border:1px solid var(--line);border-radius:8px;padding:10px;display:grid;gap:7px;text-align:center}.key-group span{font-size:12px;color:#607668}.key-group button{padding:7px;font-size:12px}.timer-controls{display:flex;align-items:end;gap:10px;margin-top:12px}.timer-controls label{margin:0;flex:1}.timer-controls input{padding:7px 9px}.resource-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.editor-log{max-height:260px;overflow:auto;margin-bottom:0;min-height:56px}.event-list{max-height:150px;overflow:auto;margin:10px 0;padding-left:23px;color:#63796a;font-size:12px}.editor-help{font-size:12px;line-height:1.8;color:#748578;margin-top:10px}.editor-help code{color:#385d46}.color-key{display:flex;align-items:center;gap:6px;font-size:11px;color:#87948c}.color-key i{width:10px;height:10px;border:1px solid #dce2dd;border-radius:2px}.package-state{min-height:19px;margin-top:10px;font-size:12px;color:var(--muted)}a{color:var(--accent)}.editor-shell details>summary{font-size:13px}.editor-shell .card-head{margin-bottom:10px}.editor-shell .notice{line-height:1.8}.editor-shell [aria-busy=true] #render{opacity:.65}@media(max-width:1100px){.editor-shell{padding:22px}.editor-grid{grid-template-columns:minmax(0,1fr) minmax(390px,1fr);gap:16px}}@media(max-width:860px){.editor-grid{grid-template-columns:1fr}.preview-column{position:static;grid-row:1}.editor-heading{align-items:start}.editor-heading .badge{white-space:normal;text-align:right}.editor-source{height:340px}}@media(max-width:480px){.editor-shell{padding:18px 12px}.preview-surface{min-height:0;padding:10px 0}.key-grid{gap:5px}.key-group{padding:7px 5px}.editor-heading .brand{font-size:14px}.editor-heading h1{font-size:21px}.editor-grid .card{padding:15px}}
+</style>
+</head>
+<body>
+<main class="editor-shell">
+  <header class="editor-heading"><div><div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Panelet</div><h1>小组件编辑器</h1></div><span id="engineBadge" class="badge good">本机运行 · macOS / Linux</span></header>
+  <p class="notice"><span id="engineDescription">在本机执行真实 Rune 脚本并绘制 400 × 300 四色画面。</span>HTTP 由下方模拟响应提供，不访问真实网络。预览用于检查内容、布局与交互，物理屏幕的颜色、刷新与耗电需在设备上验证。</p>
+  <p id="assetHelp" class="notice" hidden>预览引擎尚未就绪。请到设备的<a href="/?page=storage">文件与存储</a>安装预览资源包，然后刷新本页。</p>
+  <section class="card" style="margin-top:18px" aria-label="打开或导出小组件">
+    <div class="package-toolbar"><label>示例<select id="examples"><option value="">正在载入示例…</option></select></label><button id="loadExample" class="secondary" disabled>载入示例</button><label class="file-label">导入 .pnw / .n4w<input id="packageFile" type="file" accept=".pnw,.n4w,application/vnd.note4c.widget+zip"></label><button id="exportPackage" class="secondary">导出 .pnw</button></div>
+    <p id="packageState" class="package-state" role="status">编辑保留在当前页面；请导出保存。</p>
+  </section>
+  <div class="editor-grid">
+    <div class="editor-column" id="editorFields">
+      <section class="card"><div class="card-head"><div><h2>Rune 源码</h2><p>编辑后点击「重新预览」，从初始状态运行。</p></div><span id="sourceSize" class="muted"></span></div><label for="source" class="muted">main.rn</label><textarea id="source" class="source editor-source" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Rune 源码"></textarea></section>
+      <section class="card"><h2>小组件信息</h2><label>manifest.json<textarea id="manifest" class="manifest-json" spellcheck="false" aria-label="小组件 manifest JSON"></textarea></label><p class="fieldnote">ID、名称、版本、ABI、capabilities 与 host_permissions 会随包导出。预览同样检查 capability 与网络授权。</p><details><summary>UTF-8 资源文件</summary><div id="resources"></div><button id="addResource" class="secondary small" type="button">＋ 添加资源</button><p class="fieldnote">资源路径相对于包内 resources/，沿用设备包容量限制。</p></details></section>
+      <section class="card"><div class="card-head"><div><h2>配置与模拟环境</h2><p>这些设置只用于本次预览，不写入 .pnw 包。</p></div></div><label>组件配置 values（JSON 对象）<textarea id="config" class="json" spellcheck="false">{}</textarea></label><details open><summary>时间</summary><div class="row"><label>Unix 时间（毫秒）<input id="unixMs" type="number" step="1" min="0"></label><label>UTC 偏移（分钟）<input id="utcOffset" type="number" step="1" min="-720" max="840" value="480"></label></div><button id="useCurrentTime" class="secondary small">使用当前时间</button><p class="fieldnote">时间固定在此刻；模拟按键和定时事件可按顺序推进时间。</p></details><details><summary>HTTP 模拟响应</summary><label>按 URL 匹配的响应（JSON 数组）<textarea id="http" class="json" spellcheck="false">[]</textarea></label><p class="fieldnote">例如 [{"url":"https://example.test/data","status":200,"body":"{\"value\":1}"}]。没有匹配响应的请求会返回错误。</p><label>覆盖网络授权（JSON 数组；null 沿用 manifest）<textarea id="hostPermissions" spellcheck="false">null</textarea></label></details><details><summary>共享文件</summary><label>路径与 UTF-8 内容（JSON 对象）<textarea id="shared" class="json" spellcheck="false">{}</textarea></label><p class="fieldnote">例如 {"todo.json":"{\"items\":[]}"}。每次重放从这里的初始文件开始。</p></details></section>
+    </div>
+    <aside class="editor-column preview-column" aria-label="画面与交互预览">
+      <section class="card" id="previewPanel" aria-busy="false"><div class="card-head"><h2>画面预览</h2><button id="render">重新预览</button></div><div class="preview-surface" id="previewSurface"><canvas id="screen" width="400" height="300" role="img" aria-label="尚未运行小组件"></canvas></div><div class="preview-meta"><span id="frameState" class="badge">尚未运行</span><div class="color-key" aria-label="黑、白、黄、红"><i style="background:#000"></i><i style="background:#fff"></i><i style="background:#ff0"></i><i style="background:#f00"></i><span>400 × 300</span></div><button id="exportPng" class="ghost small" disabled>导出 PNG</button></div><p id="previewStatus" class="preview-status" role="status" aria-live="polite">载入示例或导入小组件后开始预览。</p><details><summary>设备上使用</summary><p class="editor-help">完成后导出 .pnw，在设备管理页「代码编辑 → 上传已有 .pnw / .n4w 文件」中安装。组件配置与此处的模拟数据相互独立，请在设备上另行设置。</p></details></section>
+      <section class="card"><div class="card-head"><h2>模拟输入</h2><span id="eventCount" class="muted">0 / 64 个事件</span></div><p class="muted">每次输入会按顺序重放 mounted 和已有事件。「重新预览」会清空事件历史。</p><div class="key-grid"><div class="key-group"><span>上键 · UP</span><button data-kind="click" data-key="up" class="secondary" disabled>短按</button><button data-kind="long_press" data-key="up" class="ghost" disabled>长按</button></div><div class="key-group"><span>下键 · DOWN</span><button data-kind="click" data-key="down" class="secondary" disabled>短按</button><button data-kind="long_press" data-key="down" class="ghost" disabled>长按</button></div><div class="key-group"><span>确认 · BOOT</span><button data-kind="click" data-key="boot" class="secondary" disabled>短按</button><button data-kind="long_press" data-key="boot" class="ghost" disabled>长按</button></div></div><div class="timer-controls"><label>推进时间（毫秒）<input id="advanceMs" type="number" min="0" max="2678400000" step="1" value="1000"></label><button id="timer" class="secondary" disabled>定时事件</button></div><p class="fieldnote">上方推进量适用于下一次按键或定时事件，单次最多 31 天；未绑定的事件不改变画面。</p><ol id="eventList" class="event-list" aria-label="已重放的输入事件"></ol></section>
+      <section class="card"><div class="card-head"><h2>运行日志</h2><span class="muted">本次重放</span></div><pre id="logs" class="editor-log" tabindex="0">尚未运行。</pre></section>
+    </aside>
+  </div>
+</main>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const encoder = new TextEncoder();
+const wasmPreview = document.documentElement.dataset.previewEngine === "wasm";
+const assetsApi = Number(document.documentElement.dataset.assetsApi || 1);
+const workerOperations = new Set();
+let assetsPromise = null, workerSequence = 0;
+const canvas = $("screen"), context = canvas.getContext("2d");
+let examples = [], inputEvents = [], revision = 0, requestSequence = 0, importSequence = 0, controller = null;
+let currentPreview = false, hasFrame = false, busy = false, dirty = false;
+
+function status(message, type = "") { $("previewStatus").textContent = message; $("previewStatus").className = "preview-status " + type; }
+function packageStatus(message, error = false) { $("packageState").textContent = message; $("packageState").style.color = error ? "var(--red)" : "var(--muted)"; }
+async function browserAssets() {
+  if (!assetsPromise) assetsPromise = (async () => {
+    const abort = new AbortController(), timeout = setTimeout(() => abort.abort(), 10000);
+    try {
+      const manifest = await responseJson(await fetch("/web/v1/manifest?api=" + assetsApi, {signal:abort.signal, cache:"no-store"}));
+      if (manifest.api_version !== assetsApi || typeof manifest.bundle_id !== "string" || !/^[a-f0-9]{64}$/.test(manifest.bundle_id) || !Array.isArray(manifest.files)) throw new Error("预览资源与当前固件不兼容");
+      for (const path of ["/preview.wasm", "/examples.json"]) if (!manifest.files.some(file => file.path === path)) throw new Error("预览资源不完整");
+      $("assetHelp").hidden = true;
+      return manifest;
+    } catch (error) {
+      $("assetHelp").hidden = false;
+      throw new Error("预览资源不可用，请到设备「文件与存储」安装预览资源包后刷新。" + (error.name === "AbortError" ? "（读取超时）" : "（" + error.message + "）"));
+    } finally { clearTimeout(timeout); }
+  })().catch(error => { assetsPromise = null; throw error; });
+  return assetsPromise;
+}
+async function browserCall(op, value, signal, operationRevision = revision) {
+  const bytes = value instanceof ArrayBuffer ? new Uint8Array(value) : encoder.encode(JSON.stringify(value));
+  if (bytes.byteLength > 65536) throw new Error("本次预览或打包输入超过 64 KiB，请减少源码、资源或模拟数据。");
+  const manifest = await browserAssets();
+  if (signal?.aborted) throw new DOMException("操作已取消", "AbortError");
+  return new Promise((resolve, reject) => {
+    const worker = new Worker("/editor-worker.js"), id = ++workerSequence;
+    let settled = false, executing = false;
+    const finish = (error, result) => {
+      if (settled) return;
+      settled = true; clearTimeout(timeout); signal?.removeEventListener("abort", cancel);
+      worker.terminate(); workerOperations.delete(cancel);
+      if (error) reject(error); else resolve(result);
+    };
+    const cancel = () => finish(new DOMException("操作已取消", "AbortError"));
+    let timeout = setTimeout(() => finish(new Error("预览引擎下载超过 45 秒，已停止；请检查设备连接后重试。")), 45000);
+    workerOperations.add(cancel); signal?.addEventListener("abort", cancel, {once:true});
+    worker.onmessage = event => {
+      const reply = event.data;
+      if (settled || reply?.id !== id || reply.revision !== operationRevision) return;
+      if (reply.phase) {
+        if (reply.phase === "execute" && !executing) {
+          executing = true; clearTimeout(timeout);
+          timeout = setTimeout(() => finish(new Error("浏览器执行超过 10 秒，已停止；请检查脚本后重试。")), 10000);
+        }
+        return;
+      }
+      finish(reply.error ? new Error(reply.error) : null, reply.result);
+    };
+    worker.onerror = event => { event.preventDefault(); finish(new Error("浏览器预览引擎运行失败；可修改脚本后重新预览。")); };
+    worker.onmessageerror = () => finish(new Error("浏览器预览结果无法读取，请重试。"));
+    try { worker.postMessage({id, revision:operationRevision, bundle:manifest.bundle_id, op, bytes}, [bytes.buffer]); }
+    catch (error) { finish(error); }
+  });
+}
+function checkedResult(result) {
+  if (!result?.ok) throw new Error(result?.error?.message || "小组件操作失败");
+  return result;
+}
+function updateControls() {
+  $("render").disabled = busy;
+  $("previewPanel").setAttribute("aria-busy", String(busy));
+  for (const button of document.querySelectorAll("[data-kind], #timer")) button.disabled = busy || !currentPreview || inputEvents.length >= 64;
+  $("exportPng").disabled = busy || !currentPreview || !hasFrame;
+}
+function updateEventList() {
+  $("eventCount").textContent = inputEvents.length + " / 64 个事件";
+  $("eventList").replaceChildren();
+  const keys = {up:"上键", down:"下键", boot:"确认键"};
+  for (const event of inputEvents) {
+    const row = document.createElement("li");
+    row.textContent = (event.kind === "timer" ? "定时事件" : keys[event.key] + (event.kind === "click" ? "短按" : "长按")) + " · +" + event.advance_ms + " ms";
+    $("eventList").append(row);
+  }
+}
+function invalidate(message = "内容已修改，请重新预览。") {
+  revision++; requestSequence++; controller?.abort(); controller = null;
+  inputEvents = []; currentPreview = false; busy = false; dirty = true;
+  $("previewSurface").classList.toggle("stale", hasFrame);
+  $("frameState").textContent = hasFrame ? "旧画面 · 待重新预览" : "等待预览";
+  $("frameState").className = "badge warn";
+  $("sourceSize").textContent = encoder.encode($("source").value).length.toLocaleString() + " 字节";
+  $("logs").textContent = "内容已变更；重新预览后显示当前日志。";
+  updateEventList(); updateControls(); status(message);
+}
+function parseJson(id, label, shape) {
+  let value;
+  try { value = JSON.parse($(id).value); } catch (error) { throw new Error(label + " JSON 格式错误：" + error.message); }
+  if (shape === "object" && (!value || typeof value !== "object" || Array.isArray(value))) throw new Error(label + "必须是 JSON 对象");
+  if (shape === "array" && !Array.isArray(value)) throw new Error(label + "必须是 JSON 数组");
+  return value;
+}
+function candidate() {
+  return {
+    manifest: parseJson("manifest", "小组件信息", "object"), source: $("source").value,
+    resources: [...$("resources").querySelectorAll(".resource")].map(row => ({path: row.querySelector("input").value.trim(), text: row.querySelector("textarea").value}))
+  };
+}
+function previewRequest(events) {
+  const unixMs = Number($("unixMs").value), offset = Number($("utcOffset").value);
+  if (!$("unixMs").value || !Number.isSafeInteger(unixMs) || unixMs < 0) throw new Error("Unix 时间须为非负安全整数（毫秒）");
+  if (!$("utcOffset").value || !Number.isInteger(offset) || offset < -720 || offset > 840) throw new Error("UTC 偏移须为 -720 至 840 的整数");
+  const permissions = parseJson("hostPermissions", "覆盖网络授权");
+  if (permissions !== null && (!Array.isArray(permissions) || permissions.some(value => typeof value !== "string"))) throw new Error("覆盖网络授权须为字符串数组或 null");
+  return {package: candidate(), config: parseJson("config", "组件配置", "object"), host_permissions: permissions, environment: {unix_ms: unixMs, utc_offset_minutes: offset, http: parseJson("http", "HTTP 模拟响应", "array"), shared_files: parseJson("shared", "共享文件", "object")}, events};
+}
+async function responseJson(response) {
+  let data;
+  try { data = await response.json(); } catch (_) { throw new Error("服务返回了无法解析的响应（HTTP " + response.status + "）"); }
+  if (!response.ok) throw new Error(data.error?.message || "请求失败（HTTP " + response.status + "）");
+  return data;
+}
+function drawFrame(pixels, width, height) {
+  if (width !== 400 || height !== 300 || !Array.isArray(pixels) || pixels.length !== 30000 || pixels.some(value => !Number.isInteger(value) || value < 0 || value > 255)) throw new Error("预览帧数据无效：需要 400 × 300、30000 字节的四色画面");
+  const palette = [[0,0,0], [255,255,255], [255,255,0], [255,0,0]], frame = context.createImageData(width, height);
+  for (let index = 0; index < width * height; index++) {
+    const color = palette[(pixels[index >> 2] >> (6 - (index % 4) * 2)) & 3], offset = index * 4;
+    frame.data[offset] = color[0]; frame.data[offset + 1] = color[1]; frame.data[offset + 2] = color[2]; frame.data[offset + 3] = 255;
+  }
+  context.putImageData(frame, 0, 0); hasFrame = true;
+  canvas.setAttribute("aria-label", "小组件输出的 400 × 300 四色画面");
+}
+async function render(events = []) {
+  controller?.abort(); const sequence = ++requestSequence, startRevision = revision;
+  const activeController = new AbortController(); controller = activeController; const signal = activeController.signal;
+  let acceptedFrame = false;
+  inputEvents = events.slice(); currentPreview = false; busy = true; updateEventList(); updateControls();
+  $("previewSurface").classList.toggle("stale", hasFrame);
+  $("frameState").textContent = "运行中"; $("frameState").className = "badge warn";
+  status(events.length ? "正在重放 " + events.length + " 个事件…" : "正在编译并执行小组件…");
+  $("logs").textContent = "正在运行…";
+  const timeout = setTimeout(() => activeController.abort(), wasmPreview ? 70000 : 30000);
+  try {
+    const body = previewRequest(events);
+    const result = wasmPreview ? await browserCall(0, body, signal, startRevision) : await responseJson(await fetch("/preview/v1", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body), signal}));
+    if (sequence !== requestSequence || revision !== startRevision) return;
+    $("logs").textContent = Array.isArray(result.logs) && result.logs.length ? result.logs.join("\n") : "本次运行没有输出日志。";
+    if (result.pixels !== null && result.pixels !== undefined) {
+      drawFrame(result.pixels, result.width, result.height); acceptedFrame = true;
+      $("previewSurface").classList.remove("stale");
+    }
+    if (!result.ok) throw new Error((result.error?.code ? result.error.code + " · " : "") + (result.error?.message || "小组件运行失败"));
+    if (!acceptedFrame) { context.clearRect(0, 0, 400, 300); hasFrame = false; canvas.setAttribute("aria-label", "运行完成，但小组件未提交画面"); }
+    currentPreview = true; $("previewSurface").classList.remove("stale");
+    $("frameState").textContent = hasFrame ? "最新画面" : "未提交画面"; $("frameState").className = "badge " + (hasFrame ? "good" : "warn");
+    status(hasFrame ? "运行完成" + (events.length ? " · 已重放 " + events.length + " 个事件" : " · 初始画面") : "运行完成，但没有提交画面。请检查是否调用 canvas.flush()。", hasFrame ? "success" : "");
+  } catch (error) {
+    if (sequence !== requestSequence || revision !== startRevision) return;
+    $("frameState").textContent = acceptedFrame ? "本次已提交画面 · 运行失败" : hasFrame ? "运行失败 · 保留旧画面" : "运行失败"; $("frameState").className = "badge bad";
+    if ($("logs").textContent === "正在运行…") $("logs").textContent = "本次预览未返回运行日志。";
+    status(error.name === "AbortError" ? "预览超时，请检查脚本后重新预览。" : error.message, "error");
+  } finally {
+    clearTimeout(timeout);
+    if (sequence === requestSequence) { busy = false; controller = null; updateControls(); }
+  }
+}
+function addResource(path = "", text = "") {
+  const row = document.createElement("div"); row.className = "resource";
+  const pathLabel = document.createElement("label"); pathLabel.textContent = "资源路径";
+  const input = document.createElement("input"); input.value = path; input.placeholder = "data.json";
+  const textLabel = document.createElement("label"); textLabel.textContent = "UTF-8 内容";
+  const textarea = document.createElement("textarea"); textarea.value = text; textarea.spellcheck = false;
+  const remove = document.createElement("button"); remove.className = "ghost small"; remove.textContent = "移除资源";
+  remove.onclick = () => { row.remove(); invalidate(); };
+  pathLabel.append(input); textLabel.append(textarea); row.append(pathLabel, textLabel, remove); $("resources").append(row);
+}
+function loadPackage(pkg, options = {}) {
+  $("manifest").value = JSON.stringify(pkg.manifest, null, 2); $("source").value = pkg.source;
+  $("resources").replaceChildren(); for (const resource of pkg.resources || []) addResource(resource.path, resource.text);
+  $("config").value = JSON.stringify(options.config || {}, null, 2);
+  $("hostPermissions").value = JSON.stringify(options.host_permissions ?? null, null, 2);
+  const environment = options.environment || {};
+  $("unixMs").value = wasmPreview ? environment.unix_ms || Date.now() : environment.unix_ms ?? Date.now(); $("utcOffset").value = environment.utc_offset_minutes ?? 480;
+  $("http").value = JSON.stringify(environment.http || [], null, 2); $("shared").value = JSON.stringify(environment.shared_files || {}, null, 2);
+  invalidate("小组件已载入，点击「重新预览」运行。"); dirty = false;
+}
+function download(blob, name) {
+  const url = URL.createObjectURL(blob), link = document.createElement("a");
+  link.href = url; link.download = name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function safeName(value) { return String(value || "widget").replace(/[^a-zA-Z0-9._-]/g, "_"); }
+function simulate(kind, key) {
+  if (!currentPreview || busy || inputEvents.length >= 64) return;
+  const advanceMs = Number($("advanceMs").value);
+  if (!$("advanceMs").value || !Number.isSafeInteger(advanceMs) || advanceMs < 0 || advanceMs > 2678400000) { status("推进时间须为 0 至 2678400000 的整数（毫秒，最多 31 天）", "error"); return; }
+  const event = {kind, advance_ms: advanceMs}; if (key) event.key = key;
+  void render([...inputEvents, event]);
+}
+$("editorFields").addEventListener("input", () => invalidate());
+$("source").addEventListener("keydown", event => {
+  if (event.key === "Tab") { event.preventDefault(); const start = event.target.selectionStart, end = event.target.selectionEnd; event.target.setRangeText("    ", start, end, "end"); invalidate(); }
+});
+$("render").onclick = () => void render([]);
+for (const button of document.querySelectorAll("[data-kind]")) button.onclick = () => simulate(button.dataset.kind, button.dataset.key);
+$("timer").onclick = () => simulate("timer");
+$("addResource").onclick = () => { addResource(); invalidate(); };
+$("useCurrentTime").onclick = () => { $("unixMs").value = Date.now(); invalidate(); };
+$("loadExample").onclick = () => {
+  const example = examples.find(item => item.id === $("examples").value); if (!example) return;
+  if (dirty && !confirm("载入示例会替换当前编辑。请先导出需要保留的内容。继续载入？")) return;
+  loadPackage(example.package, example); packageStatus("已载入示例：" + example.name); void render([]);
+};
+$("packageFile").onchange = async () => {
+  const file = $("packageFile").files[0]; if (!file) return;
+  if (dirty && !confirm("导入文件会替换当前编辑。请先导出需要保留的内容。继续导入？")) { $("packageFile").value = ""; return; }
+  const startRevision = revision, sequence = ++importSequence;
+  try {
+    if (file.size > 65536) throw new Error("包文件超过 64 KiB");
+    packageStatus("正在读取 " + file.name + "…");
+    const bytes = await file.arrayBuffer();
+    const pkg = wasmPreview ? checkedResult(await browserCall(2, bytes, undefined, startRevision)).package : await responseJson(await fetch("/package/decode", {method:"POST", headers:{"Content-Type":"application/octet-stream"}, body:bytes}));
+    if (sequence !== importSequence) return;
+    if (revision !== startRevision) { packageStatus("导入期间编辑内容已变化，未替换当前内容。", true); return; }
+    loadPackage(pkg); $("examples").value = ""; packageStatus("已导入 " + file.name + "；请填写组件配置与模拟数据。");
+  } catch (error) { if (sequence === importSequence && revision === startRevision) packageStatus(error.message, true); }
+  finally { $("packageFile").value = ""; }
+};
+$("exportPackage").onclick = async () => {
+  $("exportPackage").disabled = true;
+  try {
+    const pkg = candidate(), startRevision = revision;
+    let blob;
+    if (wasmPreview) {
+      const result = checkedResult(await browserCall(1, pkg, undefined, startRevision));
+      if (!Array.isArray(result.bytes) || result.bytes.length > 65536 || result.bytes.some(value => !Number.isInteger(value) || value < 0 || value > 255)) throw new Error("预览引擎返回的包数据无效");
+      blob = new Blob([new Uint8Array(result.bytes)], {type:"application/vnd.note4c.widget+zip"});
+    } else {
+      const response = await fetch("/package/encode", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(pkg)});
+      if (!response.ok) await responseJson(response);
+      blob = await response.blob();
+    }
+    download(blob, safeName(pkg.manifest.id) + ".pnw");
+    if (startRevision === revision) dirty = false;
+    packageStatus("已导出 " + blob.size.toLocaleString() + " 字节" + (startRevision !== revision ? "；导出期间的新修改尚未保存。" : "。配置与模拟数据不包含在包中。"));
+  } catch (error) { packageStatus(error.message, true); }
+  finally { $("exportPackage").disabled = false; }
+};
+$("exportPng").onclick = () => { if (!currentPreview || !hasFrame) return; const name = safeName(candidate().manifest.id); canvas.toBlob(blob => { if (blob) download(blob, name + ".png"); }, "image/png"); };
+window.addEventListener("beforeunload", event => { if (dirty) { event.preventDefault(); event.returnValue = ""; } });
+window.addEventListener("pagehide", () => { controller?.abort(); for (const cancel of workerOperations) cancel(); });
+$("unixMs").value = Date.now();
+if (wasmPreview) { $("engineBadge").textContent = "浏览器运行"; $("engineDescription").textContent = "在当前浏览器执行真实 Rune 脚本并绘制 400 × 300 四色画面，预览不会运行设备上的小组件。"; }
+async function initialize() {
+  const startRevision = revision;
+  try {
+    const manifest = wasmPreview ? await browserAssets() : null;
+    examples = await responseJson(await fetch(manifest ? "/web/" + manifest.bundle_id + "/examples.json" : "/examples"));
+    if (!Array.isArray(examples)) throw new Error("示例文件格式无效");
+    $("examples").replaceChildren(new Option("选择示例", ""));
+    for (const example of examples) $("examples").append(new Option(example.name, example.id));
+    $("loadExample").disabled = !examples.length;
+    if (examples.length && revision === startRevision) { $("examples").value = examples[0].id; loadPackage(examples[0].package, examples[0]); packageStatus("已载入示例：" + examples[0].name); await render([]); }
+  } catch (error) { $("examples").replaceChildren(new Option("示例暂不可用", "")); packageStatus("无法载入示例：" + error.message + (wasmPreview ? "" : "。仍可导入 .pnw 文件。"), true); }
+}
+void initialize();
+</script>
+</body>
+</html>

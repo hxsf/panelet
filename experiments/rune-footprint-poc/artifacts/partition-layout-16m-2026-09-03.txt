@@ -1,0 +1,74 @@
+NOTE4C Rune 0.14.2 / 16 MiB partition build evidence
+Date: 2026-09-03
+Scope: local build only; no serial device, device flash, or backup was accessed.
+
+Build:
+  CARGO_WORKSPACE_DIR="$PWD" \
+  ESP_IDF_SYS_ROOT_CRATE=note4c-test-runner \
+  CARGO_TARGET_DIR="$PWD/target/rune-partition-ota-v2" \
+  CARGO_NET_OFFLINE=true \
+  cargo +esp rustc --locked --release -p note4c-test-runner \
+    --features rune-runtime-only-footprint-poc -- \
+    -C link-arg=-Wl,--Map="$PWD/target/rune-partition-ota-v2/runtime-only.map"
+
+Result:
+  Finished release profile [optimized]
+  CONFIG_ESPTOOLPY_FLASHSIZE="16MB"
+  CONFIG_PARTITION_TABLE_CUSTOM=y
+  CONFIG_PARTITION_TABLE_FILENAME="$ENV{PROJECT_DIR}/app/test-runner/partitions-note4c-16m-ota.csv"
+  CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y
+
+Decoded generated partition-table.bin:
+  nvs,data,nvs,0x9000,24K,
+  phy_init,data,phy,0xf000,4K,
+  otadata,data,ota,0x10000,8K,
+  ota_0,app,ota_0,0x20000,4032K,
+  ota_1,app,ota_1,0x410000,4032K,
+  assets,data,spiffs,0x800000,8M,
+
+Generated flasher_args.json addresses:
+  bootloader 0x0
+  partition-table 0x8000
+  otadata 0x10000
+  app 0x20000
+
+Dual-OTA local image:
+  ESPFLASH_SKIP_UPDATE_CHECK=true espflash save-image --chip esp32s3 \
+    --flash-size 16mb --skip-padding --merge \
+    --bootloader target/rune-partition-ota-v2/xtensa-esp32s3-espidf/release/bootloader.bin \
+    --partition-table app/test-runner/partitions-note4c-16m-ota.csv \
+    --target-app-partition ota_0 \
+    target/rune-partition-ota-v2/xtensa-esp32s3-espidf/release/note4c-test-runner \
+    target/rune-partition-ota-v2/images/rune-runtime-ota0-merged.bin
+
+  App/part. size: 2,162,816/4,128,768 bytes, 52.38%
+  Merge size: 2,293,888 bytes
+  Merge SHA-256: cc82bd0af910afe9237b1a5c4dae6ebc5f3a3f5e7b19cd2370293abf0a0a53ee
+
+Optional single-app capacity comparison (not the configured default):
+  ESPFLASH_SKIP_UPDATE_CHECK=true espflash save-image --chip esp32s3 \
+    --flash-size 16mb --skip-padding --merge \
+    --bootloader target/rune-partition-ota-v2/xtensa-esp32s3-espidf/release/bootloader.bin \
+    --partition-table app/test-runner/partitions-note4c-16m-single.csv \
+    --target-app-partition factory \
+    target/rune-partition-ota-v2/xtensa-esp32s3-espidf/release/note4c-test-runner \
+    target/rune-partition-ota-v2/images/rune-runtime-single-merged.bin
+
+  App/part. size: 2,162,816/8,323,072 bytes, 25.99%
+  Merge size: 2,228,352 bytes
+  Merge SHA-256: 414cc5e269d1feaabc65dd1e8a737bb2cf544737472c63ba5d9ec594955c6d5d
+
+Other artifact SHA-256:
+  ELF: 4614250e866782951223d8d9f98ed3841fbce13a24f8036d5a7d415e68d4450c
+  generated partition-table.bin: 5a2fa90cdfeba8c3c9496e4a824471d0c5ea41955b8497addd440787bf2c5237
+  bootloader.bin: 1647da78a79b763a9caf9d5e08211efd4e62b96482ce6b883c9d30b8b8363843
+
+The 8,192 bytes at merged-image offset 0x10000 have SHA-256
+7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f,
+identical to ESP-IDF's generated ota_data_initial.bin (all erased 0xff).
+
+Both CSV files were independently parsed and verified using:
+  python3 .embuild/espressif/esp-idf/v5.5.3/components/partition_table/gen_esp32part.py <csv> <bin>
+  python3 .embuild/espressif/esp-idf/v5.5.3/components/partition_table/gen_esp32part.py <bin>
+
+No image in target/ was flashed. target/ is gitignored.

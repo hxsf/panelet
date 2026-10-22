@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: MPL-2.0
+
+# NOTE4C N16R8 has 8 MiB octal PSRAM. The archived reference firmware uses
+# the same 80 MHz octal mode. Keep the boot memory test enabled while this
+# Rust configuration is being qualified on the physical board.
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_SPEED_80M=y
+CONFIG_SPIRAM_USE_MALLOC=y
+CONFIG_SPIRAM_MEMTEST=y
+CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=512
+CONFIG_SPIRAM_MALLOC_RESERVE_INTERNAL=65536
+# Keep all FreeRTOS task stacks in internal RAM. Large Rune heap allocations
+# may use PSRAM, but task stacks and synchronization control stay internal.
+# CONFIG_SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY is not set
+
+# NOTE4C PCB V1.0 has a 16 MiB flash. Keep the existing 24 KiB NVS region,
+# add OTA metadata in the otherwise unused pre-app area, and use the two
+# 4032 KiB app slots plus 8 MiB assets layout documented in
+# partitions-note4c-16m-ota.csv.
+# CONFIG_ESPTOOLPY_FLASHSIZE_2MB is not set
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="16MB"
+# CONFIG_PARTITION_TABLE_SINGLE_APP is not set
+CONFIG_PARTITION_TABLE_CUSTOM=y
+# esp-idf-sys generates its CMake project under OUT_DIR rather than in the
+# Cargo workspace. It exports PROJECT_DIR, so keep this path portable across
+# workspaces and CARGO_TARGET_DIR values by expanding that environment value.
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="$ENV{PROJECT_DIR}/app/os/partitions-note4c-16m-ota.csv"
+CONFIG_PARTITION_TABLE_OFFSET=0x8000
+
+# The slots alone do not provide rollback. Future OTA code must run its bounded
+# startup self-test and mark a pending image valid; until OTA is implemented,
+# the initially flashed ota_0 image remains in the normal UNDEFINED state.
+CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y
+CONFIG_SPIFFS_PAGE_CHECK=y
+CONFIG_SPIFFS_USE_MAGIC=y
+CONFIG_SPIFFS_USE_MAGIC_LENGTH=y
+CONFIG_SPIFFS_OBJ_NAME_LEN=32
+
+# Keep the native USB Serial/JTAG console. GPIO19/GPIO20 are not claimed by Rust.
+# CONFIG_ESP_CONSOLE_UART_DEFAULT is not set
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+
+# Rust needs more stack than the ESP-IDF C defaults. The 30 kB EPD framebuffer
+# is allocated in the internal heap and must never be placed on this stack.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+CONFIG_ESP_SYSTEM_EVENT_TASK_STACK_SIZE=4096
+CONFIG_FREERTOS_IDLE_TASK_STACKSIZE=4096
+CONFIG_PTHREAD_TASK_STACK_SIZE_DEFAULT=4096
+
+# The widget HTTP client uses the ESP-IDF certificate bundle for verified
+# HTTPS. Insecure TLS is a per-widget capability and is only meaningful when
+# the explicitly opt-in ESP-TLS switches are available in the build.
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y
+CONFIG_ESP_TLS_INSECURE=y
+CONFIG_ESP_TLS_SKIP_SERVER_CERT_VERIFY=y

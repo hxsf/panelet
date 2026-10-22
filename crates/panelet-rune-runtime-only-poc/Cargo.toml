@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: MPL-2.0
+
+[package]
+name = "panelet-rune-runtime-only-poc"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+panelet-rune-abi-poc = { path = "../panelet-rune-abi-poc" }
+panelet-rune-unit-format-poc = { path = "../panelet-rune-unit-format-poc" }
+# `std` matches the existing host+device PoC; `emit` remains disabled.
+rune = { version = "=0.14.2", default-features = false, features = ["std"] }
+ciborium = { version = "=0.2.2", default-features = false }

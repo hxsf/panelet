@@ -1,0 +1,65 @@
+# Runtime-only precompiled Unit target size (2026-09-03)
+# Static build evidence only: no device was flashed or measured.
+
+Build controls are the same as the baseline and compiler+VM comparison:
+- `xtensa-esp32s3-espidf`, ESP-IDF v5.5.3, `cargo +esp`, `--locked`;
+- `note4c-test-runner`, release `opt-level = "s"`, default sdkconfig;
+- isolated target directory `target/rune-footprint-poc/rune-runtime-only`;
+- only application feature: `rune-runtime-only-footprint-poc`.
+
+$ CARGO_WORKSPACE_DIR="$PWD" ESP_IDF_SYS_ROOT_CRATE=note4c-test-runner \
+  CARGO_TARGET_DIR="$PWD/target/rune-footprint-poc/rune-runtime-only" \
+  cargo +esp rustc --locked --release -p note4c-test-runner \
+  --features rune-runtime-only-footprint-poc -- \
+  -C link-arg=-Wl,--Map="$PWD/target/rune-footprint-poc/maps/rune-runtime-only-note4c-test-runner.map"
+Finished `release` profile [optimized] target(s) in 14.51s
+
+ELF:
+- path: `target/rune-footprint-poc/rune-runtime-only/xtensa-esp32s3-espidf/release/note4c-test-runner`
+- ELF file bytes: 4,096,024
+- SHA-256:
+  f1a1798f97a683559f90df88a66e62dad99f624baa49a85763137c4f5b5b8c76
+
+$ /Users/hxsf/.rustup/toolchains/esp/xtensa-esp-elf/esp-15.2.0_20250920/xtensa-esp-elf/bin/xtensa-esp32s3-elf-size -A -d <ELF>
+section                  size
+.dram0.data             14610
+.dram0.bss               3664
+.flash.text           1788932
+.flash.appdesc            288
+.flash.rodata          292692
+
+Direct Flash sections: 2,081,912 B (`.flash.text + .flash.rodata + .flash.appdesc`).
+
+$ .../xtensa-esp32s3-elf-size -B -d <ELF>
+   text    data     bss     dec     hex
+1855455  307334 4051343 6214132  5ed1f4
+
+The `-B` totals include ESP-IDF linker dummy capacity sections and are not a
+runtime heap measurement.
+
+Final ESP-IDF linker map:
+`target/rune-footprint-poc/rune-runtime-only/xtensa-esp32s3-espidf/release/build/esp-idf-sys-f230cf572d679ac9/out/build/libespidf.map`
+
+The application source only consumes a byte package: no source-construction or
+front-end API identifier appears under `note4c-rune-runtime-only-poc`,
+`note4c-rune-abi-poc`, or `rune_runtime_only_footprint.rs`. However the final
+map still proves the Rune monolith links front-end/index pieces, including:
+- map line 52: `rune7compile7context...TraitContext...`;
+- map line 56: `rune5query5query...Query...`;
+- map line 66: `rune3ast...parse6parser6Parser...`;
+- map lines 3917 onward: `rune8indexing...`.
+
+Therefore this is a precompiled-Unit consumer at the application level, but
+not a parser/compiler/indexer-free Rune runtime binary.
+
+Comparable result:
+| Variant | app image | direct Flash | dram0.data | dram0.bss |
+| --- | ---: | ---: | ---: | ---: |
+| baseline | 517,792 B | 436,824 B | 14,578 B | 3,664 B |
+| compiler+VM | 2,111,584 B | 2,030,588 B | 14,610 B | 3,664 B |
+| precompiled Unit consumer (patched) | 2,162,912 B | 2,081,912 B | 14,610 B | 3,664 B |
+
+The patched precompiled-Unit image is +1,645,120 B over baseline and +51,328 B
+over compiler+VM. The latter includes the CBOR decoder/container cost, while
+the map evidence shows the expected front-end removal did not occur in Rune
+0.14.2's linked `std` artifact.

@@ -1,0 +1,110 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Panelet contributors
+// Permission and warranty terms are in resources/LICENSE.txt.
+
+struct Album {}
+
+#[widget::component]
+impl Album {
+    pub fn new() { Album {} }
+    #[widget::mounted]
+    pub async fn mounted(self) { advance().await }
+    #[widget::timer]
+    pub async fn timer(self) { advance().await }
+    #[widget::input(click(boot))]
+    pub async fn input(self, event) { advance().await }
+}
+
+use os::screen::{BLACK, WHITE, YELLOW, RED};
+
+async fn advance() {
+    let album_meta = os::resource::read_text("album.json").await?.unwrap();
+    let morning_caption = os::resource::read_text("captions/morning.txt").await?.unwrap();
+    let market_caption = os::resource::read_text("captions/market.txt").await?.unwrap();
+    let harbor_caption = os::resource::read_text("captions/harbor.txt").await?.unwrap();
+    os::log::debug(album_meta).await?;
+
+    let previous = os::storage::get("album.current").await?;
+    let frame = if previous.is_some() {
+        previous.unwrap()
+    } else {
+        "morning"
+    };
+
+    if frame == "market" {
+        let canvas = os::screen::get_context()?;
+        canvas.clear(WHITE)?;
+        canvas.fill_rect([0, 0, 400, 118], YELLOW)?;
+        canvas.fill_rect([0, 198, 400, 102], BLACK)?;
+        canvas.fill_rect([18, 76, 108, 122], RED)?;
+        canvas.fill_rect([126, 56, 128, 142], BLACK)?;
+        canvas.fill_rect([258, 84, 124, 114], YELLOW)?;
+        canvas.fill_rect([32, 96, 26, 30], WHITE)?;
+        canvas.fill_rect([78, 96, 26, 30], WHITE)?;
+        canvas.fill_rect([144, 78, 30, 34], WHITE)?;
+        canvas.fill_rect([204, 78, 30, 34], WHITE)?;
+        canvas.fill_rect([278, 106, 28, 28], WHITE)?;
+        canvas.fill_rect([328, 106, 28, 28], WHITE)?;
+        canvas.fill_rect([18, 138, 108, 14], YELLOW)?;
+        canvas.fill_rect([126, 124, 128, 14], RED)?;
+        canvas.fill_rect([258, 150, 124, 14], RED)?;
+        canvas.line([0, 198, 400, 198], WHITE)?;
+        canvas.line([74, 198, 150, 300], WHITE)?;
+        canvas.line([326, 198, 250, 300], WHITE)?;
+        canvas.rect([8, 8, 384, 284], BLACK)?;
+        canvas.fill_rect([16, 16, 76, 16], WHITE)?;
+        canvas.text([22, 20], "PHOTO 2/3", BLACK, 1)?;
+        canvas.text([18, 238], market_caption.clone(), WHITE, 2)?;
+        canvas.text([18, 278], "ALBUM DEMO", WHITE, 1)?;
+        canvas.flush().await?;
+        os::storage::set("album.current", "harbor").await?;
+    } else if frame == "harbor" {
+        let canvas = os::screen::get_context()?;
+        canvas.clear(BLACK)?;
+        canvas.fill_rect([0, 0, 400, 180], BLACK)?;
+        canvas.fill_rect([0, 180, 400, 120], WHITE)?;
+        canvas.fill_rect([286, 28, 44, 44], YELLOW)?;
+        canvas.fill_rect([66, 108, 28, 96], RED)?;
+        canvas.fill_rect([58, 104, 44, 10], RED)?;
+        canvas.fill_rect([72, 82, 16, 22], RED)?;
+        canvas.fill_rect([72, 74, 16, 8], YELLOW)?;
+        canvas.fill_rect([44, 204, 72, 8], YELLOW)?;
+        canvas.fill_rect([34, 228, 94, 8], YELLOW)?;
+        canvas.line([0, 260, 90, 260], BLACK)?;
+        canvas.line([132, 220, 230, 220], BLACK)?;
+        canvas.line([252, 260, 400, 260], BLACK)?;
+        canvas.line([0, 286, 72, 286], BLACK)?;
+        canvas.line([170, 286, 310, 286], BLACK)?;
+        canvas.rect([8, 8, 384, 284], WHITE)?;
+        canvas.fill_rect([16, 16, 76, 16], WHITE)?;
+        canvas.text([22, 20], "PHOTO 3/3", BLACK, 1)?;
+        canvas.text([18, 238], harbor_caption.clone(), BLACK, 2)?;
+        canvas.text([18, 278], "ALBUM DEMO", BLACK, 1)?;
+        canvas.flush().await?;
+        os::storage::set("album.current", "morning").await?;
+    } else {
+        let canvas = os::screen::get_context()?;
+        canvas.clear(WHITE)?;
+        canvas.fill_rect([0, 0, 400, 124], YELLOW)?;
+        canvas.fill_rect([0, 124, 400, 92], WHITE)?;
+        canvas.fill_rect([0, 216, 400, 84], BLACK)?;
+        canvas.fill_rect([314, 26, 52, 52], RED)?;
+        canvas.line([0, 216, 82, 112], BLACK)?;
+        canvas.line([82, 112, 160, 216], BLACK)?;
+        canvas.line([160, 216, 252, 90], BLACK)?;
+        canvas.line([252, 90, 400, 216], BLACK)?;
+        canvas.fill_rect([28, 178, 14, 38], BLACK)?;
+        canvas.fill_rect([22, 188, 26, 8], BLACK)?;
+        canvas.fill_rect([348, 176, 14, 40], BLACK)?;
+        canvas.fill_rect([342, 188, 26, 8], BLACK)?;
+        canvas.rect([8, 8, 384, 284], BLACK)?;
+        canvas.fill_rect([16, 16, 76, 16], WHITE)?;
+        canvas.text([22, 20], "PHOTO 1/3", BLACK, 1)?;
+        canvas.text([18, 238], morning_caption.clone(), WHITE, 2)?;
+        canvas.text([18, 278], "ALBUM DEMO", WHITE, 1)?;
+        canvas.flush().await?;
+        os::storage::set("album.current", "market").await?;
+    }
+
+    os::runtime::ok(())
+}

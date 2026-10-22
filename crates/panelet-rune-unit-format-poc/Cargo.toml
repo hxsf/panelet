@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: MPL-2.0
+
+[package]
+name = "panelet-rune-unit-format-poc"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+sha2 = { version = "=0.10.9", default-features = false }

@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Panelet contributors
+// Permission and warranty terms are in resources/LICENSE.txt.
+
+use os::screen::{BLACK, WHITE, RED};
+struct Counter { count }
+
+#[widget::component]
+impl Counter {
+    pub fn new() { Counter { count: 0 } }
+
+    #[widget::mounted]
+    pub async fn mounted(self) { self.draw().await }
+
+    #[widget::input(click(boot), long_press(up, down))]
+    pub async fn input(self, event) {
+        if event.kind == os::input::CLICK {
+            self.count += 1;
+        } else if event.keycode == os::input::UP {
+            self.count += 10;
+        } else {
+            self.count -= 10;
+        }
+        self.draw().await
+    }
+
+    #[widget::timer]
+    pub async fn tick(self) {
+        self.count += 1;
+        self.draw().await
+    }
+
+    pub async fn draw(self) {
+        let canvas = os::screen::get_context()?;
+        canvas.clear(WHITE)?;
+        canvas.text_sized([20, 24], "BUTTON COUNTER", BLACK, 32)?;
+        canvas.text_sized([20, 90], self.count.to_string(), RED, 32)?;
+        canvas.flush().await?;
+        os::runtime::ok(())
+    }
+}

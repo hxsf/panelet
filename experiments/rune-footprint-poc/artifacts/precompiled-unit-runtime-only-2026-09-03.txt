@@ -1,0 +1,81 @@
+# Rune 0.14.2 precompiled Unit host evidence (2026-09-03)
+# This record is host-only. It did not connect to, read, or write a NOTE4C.
+
+Scope:
+- Rune: exact `=0.14.2`, `default-features = false, features = ["std"]`.
+- Storage: normal `Unit<ArrayUnit>`; this experiment does not use `ByteCodeUnit`.
+- Host source: `tools/note4c-rune-unit-compiler-poc/src/lib.rs`.
+- Target consumer: `crates/note4c-rune-runtime-only-poc/src/lib.rs`.
+- Matching context/module contract: only `core + clone + cmp + vec`; no native
+  NOTE4C host functions. Container module-set ID is `N4C-CMCV-ABI-01!`, ABI 1.
+
+Validated host command:
+$ cargo +stable test --locked --target aarch64-apple-darwin \
+  -p note4c-rune-unit-format-poc -p note4c-rune-unit-compiler-poc
+
+Result: 5 tests passed.
+- compiles fixture source, encodes its Unit, validates and decodes it, then
+  executes `simple()` == 42;
+- executes `while_true()` under `budget::with(1024, ...)` and gets an error;
+- rejects a corrupted payload SHA-256, a truncated package, and an incompatible
+  container version;
+- checks the generated package byte-for-byte against the checked-in fixture;
+- rejects a non-package before creating a VM.
+
+Fixture source:
+pub fn simple() { 40 + 2 }
+pub fn while_true() { while true {} }
+
+Generated package:
+- path: `experiments/rune-footprint-poc/fixtures/minimal-array-unit-v1.rnu`
+- whole container: 1,467 B
+- fixed header: 72 B
+- CBOR payload: 1,395 B
+- whole-container SHA-256:
+  acdec40f8f0af57683f2090e53217873e44c370ebdf298f9e786e0099d56329a
+- payload SHA-256 (also stored in the header):
+  9914a1b7bf744dec217d2a842557a663ade5f349d8441c48d415e4ecd79c5426
+
+Container guards before decode:
+- magic `N4CRUNE\\0`, format version 1, Rune 0.14.2, ArrayUnit marker,
+  module-set ID, runtime ABI version, length, SHA-256, codec marker and reserved
+  bytes are checked;
+- maximum blob is 65,608 B and maximum payload is 65,536 B;
+- Rune allocator accounting is bounded by `limit::with(196608, ...)` during
+  CBOR decode; the decoder scratch is an explicit 256-byte stack buffer;
+- trailing CBOR bytes are rejected.
+
+Unpatched official Rune 0.14.2 failure evidence retained from the initial
+attempt before the local patch:
+- Rune CLI 0.14.2 has a bincode Unit-cache call site, but serializing this
+  actual Unit through bincode 1.3.3 failed with:
+  `Bincode can only encode sequences and maps that have a knowable size ahead of time`.
+  The root is Rune's hashbrown serde `collect_map(self)`, whose iterator has no
+  upper size hint.
+- CBOR serialization succeeded, but official ItemBuf decode failed:
+  `Semantic(None, "missing field \`type\`")`.
+  JSON showed the same mismatch (`missing field \`type\``): Item serialization
+  writes the external `ComponentRef` representation while ItemBuf reads the
+  internally tagged `Component` representation.
+- A first borrowed-ComponentRef decoder attempt also failed on Ciborium:
+  `invalid type: string "simple", expected a borrowed string`.
+
+Experimental local patch:
+- Cargo uses `[patch.crates-io] rune-core = { path =
+  "3rd-res/vendor/rune-core-0.14.2" }`.
+- Only `3rd-res/vendor/rune-core-0.14.2/src/item/serde.rs` is changed. It decodes the
+  external `ComponentRef` tag with owned Rune strings and converts it into
+  `Component` for ItemBuf. Its post-patch SHA-256 is
+  fb2a63d2cc40170324d719baec7c8e39edf92438fdb5cfc2934847d6816ff614.
+- See `3rd-res/vendor/rune-core-0.14.2/LOCAL-PATCH.md` and
+  `3rd-res/SOURCES.md` for source/license and why this is non-production.
+
+Security and portability limits:
+- The checksum only detects accidental/tampered bytes; it does not authenticate
+  an HTTP uploader. Rune 0.14.2 exposes no complete hostile-Unit verifier.
+  Production must accept only signed, trusted producer output and add key
+  rotation, anti-rollback, resource-policy review, and fuzzing.
+- The header deliberately locks exact Rune and module/host ABI versions. This
+  host round-trip is not an upstream promise that arbitrary Unit bytes are a
+  stable cross-version or cross-platform interchange format. No ESP board has
+  executed this package yet.

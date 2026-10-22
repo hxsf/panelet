@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: MPL-2.0
+
+[workspace]
+members = [
+    "app/os",
+    "crates/panelet-core",
+    "crates/panelet-management",
+    "crates/panelet-widget-package",
+    "crates/panelet-rune-abi-poc",
+    "crates/panelet-rune-footprint-poc",
+    "crates/panelet-rune-runtime-only-poc",
+    "crates/panelet-rune-unit-format-poc",
+    "crates/panelet-ui",
+    "crates/panelet-widget-store",
+    "crates/ssd2683",
+    "tools/panelet-rune-unit-compiler-poc",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+license = "MPL-2.0"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+
+[profile.dev]
+debug = true
+opt-level = "z"
+
+# This workspace-wide Rune 0.14.2 override also resolves in normal builds.
+# Its narrowly scoped serde correction supports the precompiled-Unit experiment;
+# it does not establish a production bytecode format or upstream compatibility.
+# See the experiment README and vendor note for the exact patch and limits.
+[patch.crates-io]
+rune-core = { path = "3rd-res/vendor/rune-core-0.14.2" }
+# esp-idf-svc 0.52.1 predates ESP-IDF 5.5's AP wrong-password event and
+# panics on that otherwise recoverable event. Pin the upstream fixes that map
+# the new events and degrade future unknown IDs to a warning.
+esp-idf-svc = { git = "https://github.com/esp-rs/esp-idf-svc", rev = "d15fb4e7abc98d5e68bd83b6569105d91a90a5ca" }

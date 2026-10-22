@@ -1,0 +1,70 @@
+Current built partition table decoded from the baseline target artifact:
+$ python3 .embuild/espressif/esp-idf/v5.5.3/components/partition_table/gen_esp32part.py target/rune-footprint-poc/baseline/xtensa-esp32s3-espidf/release/partition-table.bin
+Parsing binary partition input...
+Verifying table...
+# ESP-IDF Partition Table
+# Name, Type, SubType, Offset, Size, Flags
+nvs,data,nvs,0x9000,24K,
+phy_init,data,phy,0xf000,4K,
+factory,app,factory,0x10000,1M,
+
+Shared bootloader and partition table sizes:
+$ stat -f '%N %z bytes' <bootloader.bin and partition-table.bin>
+target/rune-footprint-poc/baseline/xtensa-esp32s3-espidf/release/bootloader.bin 20832 bytes
+target/rune-footprint-poc/baseline/xtensa-esp32s3-espidf/release/partition-table.bin 3072 bytes
+target/rune-footprint-poc/rune-std/xtensa-esp32s3-espidf/release/bootloader.bin 20832 bytes
+target/rune-footprint-poc/rune-std/xtensa-esp32s3-espidf/release/partition-table.bin 3072 bytes
+
+Baseline image command (this only writes a local file):
+$ ESPFLASH_SKIP_UPDATE_CHECK=true espflash save-image --chip esp32s3 --flash-size 16mb --skip-padding --merge \
+  --bootloader target/rune-footprint-poc/baseline/xtensa-esp32s3-espidf/release/bootloader.bin \
+  --partition-table .embuild/espressif/esp-idf/v5.5.3/components/partition_table/partitions_singleapp.csv \
+  target/rune-footprint-poc/baseline/xtensa-esp32s3-espidf/release/note4c-test-runner \
+  target/rune-footprint-poc/images/baseline-merged.bin
+Chip type:         esp32s3
+Merge:             true
+Skip padding:      true
+App/part. size:    517,792/1,048,576 bytes, 49.38%
+
+$ stat -f '%N %z bytes' target/rune-footprint-poc/images/baseline-merged.bin
+target/rune-footprint-poc/images/baseline-merged.bin 583328 bytes
+
+Rune image command (same image-generation controls, current partition):
+$ ESPFLASH_SKIP_UPDATE_CHECK=true espflash save-image --chip esp32s3 --flash-size 16mb --skip-padding --merge \
+  --bootloader target/rune-footprint-poc/rune-std/xtensa-esp32s3-espidf/release/bootloader.bin \
+  --partition-table .embuild/espressif/esp-idf/v5.5.3/components/partition_table/partitions_singleapp.csv \
+  target/rune-footprint-poc/rune-std/xtensa-esp32s3-espidf/release/note4c-test-runner \
+  target/rune-footprint-poc/images/rune-std-merged.bin
+Chip type:         esp32s3
+Merge:             true
+Skip padding:      true
+Error: espflash::image_too_big (https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/partition-tables.html#built-in-partition-tables)
+
+  × Supplied ELF image of 2111584B is too big, and doesn't fit configured app
+  │ partition of 1048576B
+  help: Reduce the size of the binary or increase the size of the app
+        partition.
+
+No Rune merged image was produced. This is expected evidence of a current
+partition-capacity failure, not a device-flashing failure. No partition table
+was changed to bypass it.
+
+Precompiled Unit consumer image command (same partition and image controls;
+experimental local `rune-core` ItemBuf serde patch):
+$ ESPFLASH_SKIP_UPDATE_CHECK=true espflash save-image --chip esp32s3 --flash-size 16mb --skip-padding --merge \
+  --bootloader target/rune-footprint-poc/rune-runtime-only/xtensa-esp32s3-espidf/release/bootloader.bin \
+  --partition-table .embuild/espressif/esp-idf/v5.5.3/components/partition_table/partitions_singleapp.csv \
+  target/rune-footprint-poc/rune-runtime-only/xtensa-esp32s3-espidf/release/note4c-test-runner \
+  target/rune-footprint-poc/images/rune-runtime-only-merged.bin
+Chip type:         esp32s3
+Merge:             true
+Skip padding:      true
+Error: espflash::image_too_big
+
+  × Supplied ELF image of 2162912B is too big, and doesn't fit configured app
+  │ partition of 1048576B
+  help: Reduce the size of the binary or increase the size of the app
+        partition.
+
+No runtime-only merged image was produced. This is only a local capacity check;
+no device, factory image, or partition table was touched.

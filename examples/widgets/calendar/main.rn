@@ -1,0 +1,155 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Panelet contributors
+// Permission and warranty terms are in resources/LICENSE.txt.
+
+struct Calendar {}
+
+#[widget::component]
+impl Calendar {
+    pub fn new() { Calendar {} }
+    #[widget::mounted]
+    pub async fn mounted(self) { refresh().await }
+    #[widget::timer]
+    pub async fn timer(self) { refresh().await }
+    #[widget::input(click(boot))]
+    pub async fn input(self, event) { refresh().await }
+}
+
+use os::screen::{BLACK, WHITE, YELLOW, RED};
+
+fn pad2(value) {
+    if value < 10 {
+        let output = "0";
+        output.push_str(value.to_string());
+        output
+    } else {
+        value.to_string()
+    }
+}
+
+fn date_text(year, month, day) {
+    let output = year.to_string();
+    output.push_str("-");
+    output.push_str(pad2(month));
+    output.push_str("-");
+    output.push_str(pad2(day));
+    output
+}
+
+fn weekday_text(weekday) {
+    if weekday == 0 { "星期日" }
+    else if weekday == 1 { "星期一" }
+    else if weekday == 2 { "星期二" }
+    else if weekday == 3 { "星期三" }
+    else if weekday == 4 { "星期四" }
+    else if weekday == 5 { "星期五" }
+    else { "星期六" }
+}
+
+fn weekday_label(column) {
+    if column == 0 { "日" }
+    else if column == 1 { "一" }
+    else if column == 2 { "二" }
+    else if column == 3 { "三" }
+    else if column == 4 { "四" }
+    else if column == 5 { "五" }
+    else { "六" }
+}
+
+fn days_in_month(year, month) {
+    if month == 2 {
+        if year % 4 == 0 && (year % 100 != 0 || year % 400 == 0) { 29 } else { 28 }
+    } else if month == 4 || month == 6 || month == 9 || month == 11 {
+        30
+    } else {
+        31
+    }
+}
+
+fn centered_ascii_x(left, value, scale) {
+    let count = if value < 10 { 1 } else { 2 };
+    let width = count * 6 * scale - scale;
+    left + (54 - width) / 2
+}
+
+async fn refresh() {
+    let local = os::time::local()?;
+    if local.is_none() {
+        let canvas = os::screen::get_context()?;
+        canvas.clear(WHITE)?;
+        canvas.text([92, 132], "TIME NOT SET", BLACK, 4)?;
+        canvas.flush().await?;
+        os::log::warn("CALENDAR NEEDS SYSTEM TIME").await?;
+        return os::runtime::ok(());
+    }
+
+    let now = local.unwrap();
+    let year = now.year;
+    let month = now.month;
+    let day = now.day;
+    let weekday = now.weekday;
+    let month_days = days_in_month(year, month);
+    let first_weekday = (weekday + 7 - ((day - 1) % 7)) % 7;
+    let week_rows = if first_weekday + month_days > 35 { 6 } else { 5 };
+    let row_height = if week_rows == 6 { 36 } else { 43 };
+    let solar_scale = if week_rows == 6 { 2 } else { 3 };
+    let lunar_y_offset = if week_rows == 6 { 18 } else { 25 };
+
+    let today_lunar = os::time::lunar(year, month, day)?;
+    let year_name = today_lunar.year_name.clone();
+    year_name.push_str("年");
+    let lunar_header = "农历";
+    lunar_header.push_str(today_lunar.month_name.clone());
+    lunar_header.push_str(today_lunar.day_name.clone());
+
+    let canvas = os::screen::get_context()?;
+    canvas.clear(WHITE)?;
+    canvas.text([12, 8], date_text(year, month, day), BLACK, 3)?;
+    canvas.text([191, 11], weekday_text(weekday), BLACK, 1)?;
+    canvas.text([241, 11], year_name, RED, 1)?;
+    canvas.text([291, 11], lunar_header, BLACK, 1)?;
+    canvas.fill_rect([10, 35, 380, 4], YELLOW)?;
+
+    let today_index = first_weekday + day - 1;
+    let today_column = today_index % 7;
+    let today_row = today_index / 7;
+    canvas.fill_rect([12 + today_column * 54, 75 + today_row * row_height, 52, row_height - 1], YELLOW)?;
+
+    canvas.rect([11, 44, 378, 30 + week_rows * row_height], BLACK)?;
+    for column in 1..7 {
+        let x = 11 + column * 54;
+        canvas.line([x, 44, x, 74 + week_rows * row_height], BLACK)?;
+    }
+    canvas.line([11, 74, 388, 74], BLACK)?;
+    for row in 1..=week_rows {
+        let y = 74 + row * row_height;
+        canvas.line([11, y, 388, y], BLACK)?;
+    }
+
+    for column in 0..7 {
+        let color = if column == 0 || column == 6 { RED } else { BLACK };
+        canvas.text([30 + column * 54, 51], weekday_label(column), color, 1)?;
+    }
+
+    for current_day in 1..=month_days {
+        let index = first_weekday + current_day - 1;
+        let column = index % 7;
+        let row = index / 7;
+        let left = 11 + column * 54;
+        let top = 74 + row * row_height;
+        let color = if column == 0 || column == 6 { RED } else { BLACK };
+        canvas.text(
+            [centered_ascii_x(left, current_day, solar_scale), top + 2],
+            current_day.to_string(),
+            color,
+            solar_scale,
+        )?;
+        let lunar = os::time::lunar(year, month, current_day)?;
+        let lunar_label = if lunar.day == 1 { lunar.month_name } else { lunar.day_name };
+        canvas.text([left + 11, top + lunar_y_offset], lunar_label, color, 1)?;
+    }
+
+    canvas.flush().await?;
+    os::log::info("CALENDAR SUBMITTED").await?;
+    os::runtime::ok(())
+}

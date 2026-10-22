@@ -1,0 +1,13 @@
+target/
+__pycache__/
+.DS_Store
+/.embuild/
+/sdkconfig
+/sdkconfig.old
+/.env
+/.env.*
+!/.env.example
+/tmp/
+*.bin
+*.elf
+*.map

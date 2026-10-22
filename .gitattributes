@@ -1,0 +1,15 @@
+*.pdf binary
+*.png binary
+*.pnu binary
+# Historical precompiled fixtures keep their original filename.
+*.rnu binary
+
+# Preserve archived upstream files byte-for-byte without applying this
+# repository's whitespace policy to third-party snapshots.
+3rd-res/youn-ink-fourcolor-firmware/** whitespace=-trailing-space,-space-before-tab
+
+# Preserve the exact upstream license snapshot, including original whitespace.
+3rd-res/fonts/COPYING-16.0.04.txt whitespace=-blank-at-eol,-blank-at-eof
+
+# Preserve Mozilla's published MPL text, including its original whitespace.
+LICENSE whitespace=-blank-at-eol

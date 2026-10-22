@@ -1,0 +1,30 @@
+$ /Users/hxsf/.rustup/toolchains/esp/xtensa-esp-elf/esp-15.2.0_20250920/xtensa-esp-elf/bin/xtensa-esp32s3-elf-size -A -d target/rune-footprint-poc/baseline/xtensa-esp32s3-espidf/release/note4c-test-runner
+target/rune-footprint-poc/baseline/xtensa-esp32s3-espidf/release/note4c-test-runner  :
+section                  size         addr
+.rtc.text                   0   1611653120
+.rtc.force_fast             0   1611653120
+.rtc_noinit                 0   1342177280
+.rtc.force_slow            32   1342177280
+.rtc_reserved              24   1611661288
+.iram0.vectors           1028   1077362688
+.iram0.text             65207   1077363716
+.dram0.dummy            49920   1070104576
+.dram0.data             14578   1070154496
+.noinit                     2   1070169074
+.dram0.bss               3664   1070169080
+.flash.text            331044   1107296288
+.flash_rodata_dummy    393216   1006632992
+.flash.appdesc            256   1007026208
+.flash.rodata          105524   1007026464
+.ext_ram.dummy         524256   1006632992
+.iram0.text_end            69   1077428923
+.iram0.data                 0   1077428992
+.iram0.bss                  0   1077428992
+.dram0.heap_start           0   1070172744
+.comment                  147            0
+.xtensa.info               56            0
+Total                 1489023
+
+$ /Users/hxsf/.rustup/toolchains/esp/xtensa-esp-elf/esp-15.2.0_20250920/xtensa-esp-elf/bin/xtensa-esp32s3-elf-size -B -d target/rune-footprint-poc/baseline/xtensa-esp32s3-espidf/release/note4c-test-runner
+   text    data     bss     dec     hex filename
+ 397535  120134  971151 1488820  16b7b4 target/rune-footprint-poc/baseline/xtensa-esp32s3-espidf/release/note4c-test-runner

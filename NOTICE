@@ -1,0 +1,18 @@
+Panelet
+Copyright (c) 2026 Panelet contributors
+
+Except where a file or directory states otherwise, Panelet's original code
+and documentation are licensed under the Mozilla Public License 2.0. See LICENSE.
+Source code: https://github.com/hxsf/panelet
+
+The four widget example subdirectories in examples/widgets/ and explicitly
+marked embedded Rune example templates are licensed under MIT. See
+examples/widgets/LICENSE. The generic build-upload.mjs tool remains MPL-2.0
+as marked in that file.
+Their MIT license does not apply to the surrounding editor, compiler, runtime,
+or firmware implementation.
+
+Third-party code, fonts, and hardware reference materials retain their own
+copyright notices and terms. In particular, the generated cjk-glyphs.dat and
+ascii16-glyphs.dat font tables are not covered by Panelet's MPL license.
+See 3rd-res/SOURCES.md and docs/development/licensing.md for the scope and notices.

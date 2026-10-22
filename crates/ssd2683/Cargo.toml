@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: MPL-2.0
+
+[package]
+name = "ssd2683"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.77"
+description = "Auditable no_std SSD2683 core for the NOTE4C four-color panel"
+license = "MPL-2.0"
+
+[dependencies]
+embedded-hal = "1.0.0"
+
+[features]
+default = []
+experimental-partial-refresh = []
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "warn"

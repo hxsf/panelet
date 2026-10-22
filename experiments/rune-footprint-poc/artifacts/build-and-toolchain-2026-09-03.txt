@@ -1,0 +1,124 @@
+# Rune footprint PoC: build and toolchain capture (2026-09-03)
+# No serial port, Flash, partition table on hardware, eFuse, or factory backup
+# was read or written while producing this record.
+
+Repository state before the PoC:
+## No commits yet on main
+All repository files were already untracked in this initial checkout. No
+existing file was overwritten, no commit was made, and target artifacts stay
+under the ignored target/ directory.
+
+Resolved toolchain:
+$ cargo +esp -V
+cargo 1.97.0-nightly (c980f4866 2026-06-30) (1.97.0.0)
+
+$ rustc +esp -vV
+rustc 1.97.0-nightly (8ea53bcd7 2026-07-08)
+host: aarch64-apple-darwin
+release: 1.97.0-nightly
+LLVM version: 21.1.3
+
+$ xtensa-esp32s3-elf-size --version
+GNU size (crosstool-NG esp-15.2.0_20250920) 2.45
+
+$ espflash --version
+espflash 4.5.0
+
+Shared build controls:
+- target: xtensa-esp32s3-espidf (from .cargo/config.toml)
+- target linker: ldproxy
+- rustflags: --cfg espidf_time64
+- ESP-IDF: v5.5.3
+- profile: release, opt-level = "s"
+- package: note4c-test-runner
+- lockfile: Cargo.lock, passed with --locked
+- isolated targets: target/rune-footprint-poc/baseline and
+  target/rune-footprint-poc/rune-std
+- CARGO_WORKSPACE_DIR=$PWD and ESP_IDF_SYS_ROOT_CRATE=note4c-test-runner are
+  deliberately set so embuild resolves the actual workspace despite the
+  isolated CARGO_TARGET_DIR.
+
+Baseline build command (no Rune feature):
+$ CARGO_WORKSPACE_DIR="$PWD" ESP_IDF_SYS_ROOT_CRATE=note4c-test-runner \
+  CARGO_TARGET_DIR="$PWD/target/rune-footprint-poc/baseline" \
+  cargo +esp rustc --locked --release -p note4c-test-runner -- \
+  -C link-arg=-Wl,--Map="$PWD/target/rune-footprint-poc/maps/baseline-note4c-test-runner.map"
+   Compiling note4c-test-runner v0.1.0 (/Users/hxsf/workspace/self/note4c/app/test-runner)
+    Finished `release` profile [optimized] target(s) in 4.18s
+
+Rune build command (only change is the opt-in feature):
+$ CARGO_WORKSPACE_DIR="$PWD" ESP_IDF_SYS_ROOT_CRATE=note4c-test-runner \
+  CARGO_TARGET_DIR="$PWD/target/rune-footprint-poc/rune-std" \
+  cargo +esp rustc --locked --release -p note4c-test-runner \
+  --features rune-footprint-poc -- \
+  -C link-arg=-Wl,--Map="$PWD/target/rune-footprint-poc/maps/rune-std-note4c-test-runner.map"
+   Compiling note4c-rune-footprint-poc v0.1.0 (/Users/hxsf/workspace/self/note4c/crates/note4c-rune-footprint-poc)
+   Compiling note4c-test-runner v0.1.0 (/Users/hxsf/workspace/self/note4c/app/test-runner)
+    Finished `release` profile [optimized] target(s) in 8.84s
+
+Direct dependency selection:
+crates/note4c-rune-footprint-poc/Cargo.toml:
+rune = { version = "=0.14.2", default-features = false, features = ["std"] }
+
+Cargo.lock:
+name = "rune"
+version = "0.14.2"
+
+Final artifacts (ELF hashes are reproducibility identifiers for this build,
+not a claim of byte-identical reproducible builds across timestamps):
+$ stat -f '%N %z bytes' <ELFs>
+target/rune-footprint-poc/baseline/xtensa-esp32s3-espidf/release/note4c-test-runner 967508 bytes
+target/rune-footprint-poc/rune-std/xtensa-esp32s3-espidf/release/note4c-test-runner 3598012 bytes
+
+$ shasum -a 256 <ELFs> target/rune-footprint-poc/images/baseline-merged.bin
+0afcf52a4132285c934132c696d6603b2b5e82027dc6330d05578ffc10c30b3c  target/rune-footprint-poc/baseline/xtensa-esp32s3-espidf/release/note4c-test-runner
+6135e01a9c81258c8ec05343c4eb986c8d6df72b29d27bbd9b103f282ea53347  target/rune-footprint-poc/rune-std/xtensa-esp32s3-espidf/release/note4c-test-runner
+639882e1f075ab57a03622b5c73e34340f008e7ee9117c171f01aec17d0571e2  target/rune-footprint-poc/images/baseline-merged.bin
+
+Final linker maps intentionally kept in ignored target/:
+- baseline: target/rune-footprint-poc/baseline/xtensa-esp32s3-espidf/release/build/esp-idf-sys-4038f5cc3301245f/out/build/libespidf.map (18,299,281 bytes)
+- Rune: target/rune-footprint-poc/rune-std/xtensa-esp32s3-espidf/release/build/esp-idf-sys-f230cf572d679ac9/out/build/libespidf.map (39,260,664 bytes)
+
+The ESP-IDF link configuration's --Map=.../libespidf.map occurs after the
+user-supplied map argument, so it is the final map file. It contains both
+Rust/Rune objects (for example librune-*.rlib) and the final application link
+inputs; it is therefore the map used for this measurement.
+
+Relevant initial isolation failure, retained verbatim as an excerpt:
+Missing esp-mqtt submodule. Please run 'git submodule update --init --recursive'
+
+Cause: when only CARGO_TARGET_DIR was overridden, embuild inferred
+target/rune-footprint-poc as its workspace and created an incomplete ESP-IDF
+provisioning tree there. The corrected commands above pin CARGO_WORKSPACE_DIR
+to the real repository root; no ESP-IDF checkout was altered manually.
+
+An earlier Rune source formatting error was also fixed before the final build:
+error: invalid format string: expected '}', found '\"'
+It came from JSON braces in app/test-runner/src/rune_footprint.rs, not from
+Rune, Rust, ESP-IDF, or Xtensa compatibility. Both final builds above pass.
+
+Precompiled Unit consumer (experimental patched Rune-core) build:
+$ CARGO_WORKSPACE_DIR="$PWD" ESP_IDF_SYS_ROOT_CRATE=note4c-test-runner \
+  CARGO_TARGET_DIR="$PWD/target/rune-footprint-poc/rune-runtime-only" \
+  cargo +esp rustc --locked --release -p note4c-test-runner \
+  --features rune-runtime-only-footprint-poc -- \
+  -C link-arg=-Wl,--Map="$PWD/target/rune-footprint-poc/maps/rune-runtime-only-note4c-test-runner.map"
+   Compiling note4c-rune-abi-poc v0.1.0
+   Compiling note4c-rune-runtime-only-poc v0.1.0
+   Compiling note4c-test-runner v0.1.0
+    Finished `release` profile [optimized] target(s) in 14.51s
+
+This build uses the same target, ESP-IDF, profile, sdkconfig and application
+as the preceding two variants. Its only application feature is
+`rune-runtime-only-footprint-poc`; Cargo additionally applies the explicitly
+documented experiment-local `rune-core 0.14.2` ItemBuf serde patch.
+
+Final runtime-only ELF:
+- `target/rune-footprint-poc/rune-runtime-only/xtensa-esp32s3-espidf/release/note4c-test-runner`
+- 4,096,024 file bytes
+- SHA-256 `f1a1798f97a683559f90df88a66e62dad99f624baa49a85763137c4f5b5b8c76`
+
+Final map used for this measurement:
+- `target/rune-footprint-poc/rune-runtime-only/xtensa-esp32s3-espidf/release/build/esp-idf-sys-f230cf572d679ac9/out/build/libespidf.map`
+- it still contains Rune compile/query/parser/indexing symbols; see
+  `size-rune-runtime-only-patched-2026-09-03.txt` for exact map evidence.
